@@ -210,6 +210,130 @@
                 </div>
             </section>
 
+            <!-- TABEL OBSERVASI CLI -->
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-4">
+                    <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-blue-600"></i> Tabel Observasi CLI
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">Lakukan ujicoba pada simulator terminal di atas dan catat deskripsi fungsi serta hasil outputnya.</p>
+                </div>
+                <div class="p-4 sm:p-5 overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-600 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-700 uppercase font-semibold tracking-wider">
+                                <th class="py-3 px-3 text-center w-10">No</th>
+                                <th class="py-3 px-3 w-40 sm:w-48">Perintah / Ujicoba</th>
+                                <th class="py-3 px-3 min-w-[200px]">Deskripsi Fungsi Perintah</th>
+                                <th class="py-3 px-3 min-w-[200px]">Hasil / Output Terminal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">1</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">pwd</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_1" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_1" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">2</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">ls</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_2" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_2" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">3</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">ls -l</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_3" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_3" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">4</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">mkdir praktikum1</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_4" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_4" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">5</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">cd praktikum1</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_5" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_5" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">6</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">touch laporan.txt</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_6" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_6" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">7</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">cd ..</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_7" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_7" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">8</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">ls -a</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_8" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_8" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">9</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">rm -r praktikum1</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_9" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_9" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-2.5 px-3 text-center font-semibold text-slate-500">10</td>
+                                <td class="py-2.5 px-3"><code class="bg-slate-800 text-blue-300 font-mono px-2 py-1 rounded">clear</code></td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_fungsi_10" placeholder="Jelaskan fungsi perintah ini..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <input type="text" id="obs_output_10" placeholder="Tuliskan output yang muncul..." class="w-full px-3 py-1.5 border border-slate-200 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-slate-50 focus:bg-white transition font-mono text-slate-700">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- SOAL PILIHAN GANDA -->
             <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="bg-slate-50 border-b border-slate-200 px-5 py-4">
@@ -744,6 +868,12 @@ SMK MUDITA SINGKAWANG,XII TJKT,35 WILLY VEN`;
 
         function resetForm() {
             document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            for (let i = 1; i <= 10; i++) {
+                const elFungs = document.getElementById(`obs_fungsi_${i}`);
+                const elOut = document.getElementById(`obs_output_${i}`);
+                if (elFungs) elFungs.value = '';
+                if (elOut) elOut.value = '';
+            }
             document.getElementById('inputSekolah').value = '';
             filterKelas();
             document.getElementById('displayNama').textContent = 'Belum ada identitas';
@@ -786,6 +916,15 @@ SMK MUDITA SINGKAWANG,XII TJKT,35 WILLY VEN`;
                 }
             }
 
+            // Collecting observation table responses
+            const observasi = {};
+            for (let i = 1; i <= 10; i++) {
+                const fVal = document.getElementById(`obs_fungsi_${i}`)?.value || '';
+                const oVal = document.getElementById(`obs_output_${i}`)?.value || '';
+                observasi[`obs_fungsi_${i}`] = fVal;
+                observasi[`obs_output_${i}`] = oVal;
+            }
+
             const durasiDetik = Math.round((Date.now() - waktuMulai) / 1000);
             const pilihanLkpdEl = document.getElementById('pilihanLkpd');
             const pilihanLkpdTerpilih = pilihanLkpdEl ? pilihanLkpdEl.value : "LKPD 1 (ASJ - Navigasi Linux)";
@@ -799,6 +938,7 @@ SMK MUDITA SINGKAWANG,XII TJKT,35 WILLY VEN`;
                 durasi_detik: durasiDetik,
                 skor_pg_benar: skorBenar,
                 nilai_akhir: nilaiAkhir,
+                ...observasi,
                 ...answers
             };
 
