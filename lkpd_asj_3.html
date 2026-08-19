@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKPD 3: Manajemen Hak Akses (Permission) & Kepemilikan - ASJ</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        
+        /* Custom Scrollbar for Terminal */
+        .terminal-scroll::-webkit-scrollbar { width: 8px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .terminal-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Blinking cursor */
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #38bdf8; /* sky-400 */
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        /* Hidden input */
+        #termInput {
+            opacity: 0;
+            position: absolute;
+            z-index: -10;
+            top: 0;
+        }
+
+        /* Form styling enhancements */
+        .input-focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+        }
+        
+        /* Highlight match for grep */
+        .grep-match {
+            background-color: #991b1b;
+            color: #fecaca;
+            font-weight: bold;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-emerald-200 selection:text-emerald-900">
+
+    <!-- Header Professional SysAdmin Theme -->
+    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                <!-- Tombol Portal ASJ -->
+                <a href="#" class="group relative inline-flex items-center gap-2 px-3 py-2 text-xs font-mono font-semibold text-emerald-300 bg-slate-950/90 border border-emerald-500/40 rounded-xl overflow-hidden shadow-[0_0_12px_rgba(16,185,129,0.2)] hover:shadow-[0_0_22px_rgba(16,185,129,0.5)] hover:border-emerald-300 hover:text-white transition-all duration-300 backdrop-blur-md active:scale-95">
+                    <span class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-600/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <i class="fa-solid fa-chevron-left text-emerald-400 group-hover:-translate-x-1 transition-transform duration-200"></i>
+                    <span class="relative z-10 tracking-wider">PORTAL ASJ</span>
+                </a>
+
+                <div class="bg-emerald-600 p-2 rounded-lg flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                        <span class="text-[10px] font-bold bg-slate-800 text-emerald-400 px-2 py-0.5 rounded tracking-widest uppercase border border-slate-700">Mata Pelajaran: ASJ</span>
+                        <span class="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded tracking-widest uppercase border border-emerald-500/20"><i class="fa-solid fa-lock mr-1"></i>Security Essential</span>
+                    </div>
+                    <h1 class="text-lg font-semibold tracking-tight text-slate-100">LKPD 3 : Manajemen Hak Akses (Permission) & Kepemilikan</h1>
+                </div>
+            </div>
+            <div class="text-xs font-medium bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 flex items-center shadow-inner">
+                <i class="fa-solid fa-user-gear text-emerald-400 mr-2 text-base"></i>
+                <span id="displayNama" class="text-slate-300">Belum ada identitas</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- IDENTITAS SECTION -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-300" id="section-identitas">
+            <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+                <h2 class="text-sm font-semibold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-id-card-clip text-emerald-600"></i> Identitas Peserta Didik
+                </h2>
+                <span class="text-[10px] text-slate-400 font-medium">Lengkapi identitas untuk mengaktifkan lab</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-600">Instansi / Sekolah</label>
+                    <select id="inputSekolah" onchange="filterKelas()" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
+                        <option value="">-- Pilih Instansi --</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-600">Kelas / Divisi</label>
+                    <select id="inputKelas" onchange="filterNama()" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
+                        <option value="">-- Pilih Kelas --</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-600">Nama Lengkap</label>
+                    <select id="inputNamaLengkap" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
+                        <option value="">-- Pilih Nama --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="hidden">
+                <input type="radio" id="pilihanLkpd" name="pilihanLkpd" value="LKPD 3 (ASJ - Manajemen Hak Akses)" checked>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="simpanIdentitas()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow flex items-center gap-2">
+                    Masuk Terminal Lab <i class="fa-solid fa-terminal text-xs"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- MAIN CONTENT (LOCKED INITIALLY) -->
+        <div id="mainContent" class="opacity-40 pointer-events-none transition-opacity duration-500 space-y-6 filter blur-[1px]">
+
+            <!-- INFO CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                    <h3 class="font-semibold text-slate-800 mb-3 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-500"></i> Fokus: Keamanan Dasar Linux
+                    </h3>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-2">
+                        Di sistem operasi Linux, <strong>tidak semua orang boleh mengubah file sistem</strong>. Hal ini untuk mencegah kerusakan sistem atau pencurian data. 
+                    </p>
+                    <ul class="text-sm text-slate-600 space-y-2 list-none">
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> Memahami konsep rwx (Read, Write, Execute).</li>
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> Mengubah Hak Akses dengan `chmod` (Oktal & Simbolik).</li>
+                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> Mengelola Kepemilikan (Owner/Group) dengan `chown` & `chgrp`.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-cyan-500">
+                    <h3 class="font-semibold text-slate-800 mb-3 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-cyan-500"></i> Sensasi Kerja Admin Server
+                    </h3>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                        Sebagai IT Security & Admin Server di perusahaan, Anda bertanggung jawab penuh memastikan data sensitif seperti file gaji, database, dan file konfigurasi web tidak bisa dihapus atau disalin oleh sembarang karyawan. Kesalahan memberi permission bisa berakibat fatal!
+                    </p>
+                    <div class="bg-slate-900 text-emerald-400 p-2.5 rounded-lg text-xs font-mono border border-slate-800">
+                        <i class="fa-solid fa-lock text-cyan-400 mr-1"></i> Mode Siswa: Menguji keamanan file via Terminal CLI.
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIRTUAL TERMINAL (HACKER / SYSADMIN STYLE) - JANGAN DIUBAH -->
+            <section class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="bg-[#0b1320] rounded-xl overflow-hidden shadow-2xl relative ring-1 ring-slate-800">
+                    <!-- Title Bar -->
+                    <div class="bg-[#131e32] px-4 py-2.5 flex items-center justify-between border-b border-slate-800">
+                        <div class="flex gap-2 w-16">
+                            <div class="w-3 h-3 rounded-full bg-red-500/90 shadow-inner"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-500/90 shadow-inner"></div>
+                            <div class="w-3 h-3 rounded-full bg-emerald-500/90 shadow-inner"></div>
+                        </div>
+                        <div class="text-xs text-emerald-400/90 font-medium font-mono flex items-center gap-2">
+                            <i class="fa-solid fa-server text-emerald-500"></i> admin@sys-server: /etc & /home — bash
+                        </div>
+                        <div class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-2 py-0.5 rounded font-mono">SSH LIVE</div>
+                    </div>
+                    
+                    <!-- Cheat Sheet Bar -->
+                    <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2 text-xs text-slate-300 font-mono flex flex-wrap items-center justify-between gap-2">
+                        <span><i class="fa-solid fa-lightbulb text-amber-400 mr-1.5"></i> Coba Perintah Teks: 
+                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">cat /etc/network/interfaces</code> | 
+                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">grep ERROR /var/log/syslog</code> | 
+                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">ls -l /etc</code>
+                        </span>
+                    </div>
+
+                    <!-- Terminal Output Area -->
+                    <div class="p-4 h-80 overflow-y-auto terminal-scroll font-mono text-[13px] leading-relaxed cursor-text relative" id="terminalBox" onclick="focusTerminal()">
+                        <div id="termOutput" class="text-slate-300">
+                            <div class="text-emerald-400 font-bold mb-1">Debian GNU/Linux 12 (bookworm) - Server Administrasi ASJ</div>
+                            <div class="text-slate-500 mb-1">System Console - Active Session for Admin</div>
+                            <div class="text-slate-400 text-xs mb-3 border-b border-slate-800 pb-2">Ketik <code class="text-cyan-400 font-bold">ls -l</code> atau <code class="text-cyan-400 font-bold">cat /etc/hostname</code> untuk memulai inspeksi file server.</div>
+                        </div>
+                        <div class="flex items-center text-slate-300 mt-1">
+                            <span class="text-emerald-400 font-semibold mr-2" id="promptText">siswa@server:~$</span>
+                            <span id="typingArea" class="whitespace-pre"></span><span class="terminal-cursor"></span>
+                        </div>
+                        <!-- Hidden Input Box -->
+                        <input type="text" id="termInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" 
+                               oninput="updateTyping()" onkeydown="handleTermKey(event)">
+                    </div>
+
+                    <!-- Termux-style Keyboard Toolbar -->
+                    <div class="bg-[#131e32] px-3 py-2 border-t border-slate-800 flex flex-wrap gap-1.5 justify-center text-xs font-mono select-none">
+                        <button onclick="sendVirtualKey('Escape')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">ESC</button>
+                        <button onclick="sendVirtualKey('Tab')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">TAB</button>
+                        <button onclick="insertChar('/')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">/</button>
+                        <button onclick="insertChar('-')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">-</button>
+                        <button onclick="insertChar('grep ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">grep</button>
+                        <button onclick="insertChar('cat ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">cat</button>
+                        <button onclick="insertChar('ls -l ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">ls -l</button>
+                        <button onclick="sendVirtualKey('ArrowUp')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 transition">▲</button>
+                        <button onclick="sendVirtualKey('ArrowDown')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 transition">▼</button>
+                        <button onclick="sendCtrlC()" class="px-2.5 py-1 bg-red-900/40 hover:bg-red-800/60 active:bg-red-600 text-red-300 rounded border border-red-700/50 font-semibold transition">CTRL+C</button>
+                        <button onclick="sendVirtualKey('Enter')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded border border-emerald-500 font-semibold transition shadow-sm">ENTER ↵</button>
+                    </div>
+                </div>
+            </section>
+            <!-- END OF VIRTUAL TERMINAL -->
+
+            <!-- TABEL OBSERVASI PRAKTIKUM CLI: PERMISSION & OWNERSHIP -->
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div>
+                        <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-table-list text-emerald-600"></i> Tabel Observasi CLI: Hak Akses & Kepemilikan
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Pelajari fungsi setiap perintah di bawah ini dan catat hasilnya. (Beberapa perintah memerlukan hak akses Root).</p>
+                    </div>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">10 Perintah Penting</span>
+                </div>
+                
+                <div class="p-4 sm:p-5 overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800 text-slate-100 font-mono border-b border-slate-700">
+                                <th class="p-3 text-center w-12 rounded-tl-lg">No</th>
+                                <th class="p-3 min-w-[200px]">Perintah CLI Keamanan</th>
+                                <th class="p-3 min-w-[260px]">Deskripsi Fungsi Server</th>
+                                <th class="p-3 min-w-[280px] rounded-tr-lg">Catatan Analisa Kamu</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-slate-700">
+                            <!-- Item 1-10 Generate -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">1</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">ls -l</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Menampilkan daftar file secara detail, termasuk melihat string hak akses (rwx), pemilik (owner), dan grup (group).</td>
+                                <td class="p-3">
+                                    <textarea id="obs_1" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">2</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chmod 755 [nama_file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah hak akses (Pemilik bisa rwx, Grup & Others hanya r-x). Standar aman untuk direktori atau file script executable.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_2" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">3</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chmod 644 [nama_file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah hak akses (Pemilik bisa rw-, Grup & Others hanya r--). Standar aman untuk file dokumen biasa agar tidak bisa diubah orang lain.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_3" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">4</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chmod u+x [nama_file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah hak akses via metode simbolik (menambahkan hak eksekusi 'x' khusus untuk user/pemilik 'u').</td>
+                                <td class="p-3">
+                                    <textarea id="obs_4" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">5</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chmod -R 775 [direktori]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah hak akses secara rekursif (berlaku untuk folder tersebut beserta seluruh file dan sub-folder di dalamnya).</td>
+                                <td class="p-3">
+                                    <textarea id="obs_5" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">6</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chown [user] [file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah kepemilikan user (owner) utama dari sebuah file atau direktori.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_6" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">7</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chgrp [group] [file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah kelompok/grup (group) yang diizinkan mengakses file atau direktori tersebut.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_7" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">8</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chown [user]:[group] [file]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Jalan pintas (shortcut) untuk mengubah kepemilikan user dan grup sekaligus dalam satu baris perintah.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_8" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">9</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">chown -R [user] [direktori]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengubah kepemilikan (owner) secara rekursif pada sebuah folder besar beserta seluruh isinya ke bawah.</td>
+                                <td class="p-3">
+                                    <textarea id="obs_9" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">10</td>
+                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
+                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">sudo [perintah]</code>
+                                </td>
+                                <td class="p-3 leading-relaxed">Mengeksekusi perintah dengan hak Superuser. Mengubah file sistem krusial wajib memakai ini agar tidak ditolak aksesnya (Permission Denied).</td>
+                                <td class="p-3">
+                                    <textarea id="obs_10" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SOAL UJI KOMPETENSI LKPD 3: SKENARIO DUNIA KERJA -->
+            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex justify-between items-center">
+                    <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-emerald-600"></i> Uji Kompetensi LKPD 3: Studi Kasus Keamanan Admin Server
+                    </h3>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium">Skor Maksimal: 100</span>
+                </div>
+                
+                <div class="px-5 py-3 bg-emerald-50 border-b border-emerald-100 text-sm text-slate-700">
+                    <strong>SKENARIO KERJA:</strong> Anda baru saja diterima sebagai IT System Administrator di <em>PT. Maju Bersama</em>. Anda ditugaskan untuk mengamankan file gaji karyawan, merapikan struktur direktori divisi Finance, dan memastikan file web server tidak bisa dideface (dihack) oleh pengguna biasa.
+                </div>
+
+                <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Soal 1 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">1. Anda melihat sebuah file bernama <code class="bg-slate-200 px-1 rounded text-xs">gaji_karyawan.xls</code>. Anda ingin melihat secara detail siapa pemilik file tersebut dan hak aksesnya. Perintah yang Anda ketikkan di terminal adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="A" class="mt-1"> A. ls -l</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="B" class="mt-1"> B. chmod detail</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="C" class="mt-1"> C. cat gaji_karyawan.xls</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="D" class="mt-1"> D. grep owner</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="E" class="mt-1"> E. show permission</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 2 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">2. Hasil perintah sebelumnya menunjukkan string <code class="bg-slate-200 px-1 rounded text-xs">rwx</code>. Huruf 'r', 'w', 'x' secara berurutan adalah singkatan dari...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="A" class="mt-1"> A. Run, Write, X-ray</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="B" class="mt-1"> B. Read, Write, Execute</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="C" class="mt-1"> C. Remove, Wait, Exit</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="D" class="mt-1"> D. Read, Warning, Extract</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="E" class="mt-1"> E. Reset, Write, Extend</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 3 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">3. Angka oktal yang merepresentasikan hak akses "Read" (Membaca) dalam Linux adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="A" class="mt-1"> A. 1</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="B" class="mt-1"> B. 2</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="C" class="mt-1"> C. 4</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="D" class="mt-1"> D. 5</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="E" class="mt-1"> E. 7</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 4 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">4. Direktur meminta Anda agar file laporan keuangan HANYA bisa dibaca dan diedit olehnya (pemilik). Orang lain tidak boleh membaca sama sekali. Perintah yang Anda gunakan adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="A" class="mt-1"> A. chmod 600 laporan.pdf</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="B" class="mt-1"> B. chmod 777 laporan.pdf</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="C" class="mt-1"> C. chmod 644 laporan.pdf</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="D" class="mt-1"> D. chmod 444 laporan.pdf</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="E" class="mt-1"> E. chmod 000 laporan.pdf</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 5 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">5. Untuk file konfigurasi standar seperti dokumen teks web, hak akses <code class="bg-slate-200 px-1 rounded text-xs">644</code> sering digunakan. Apa arti dari <code class="bg-slate-200 px-1 rounded text-xs">644</code>?</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="A" class="mt-1"> A. Semua orang memiliki akses penuh</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="B" class="mt-1"> B. Tidak ada yang bisa membuka file tersebut</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="C" class="mt-1"> C. Owner bisa r/w, Group & Others hanya bisa r (Read)</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="D" class="mt-1"> D. Hanya root yang bisa mengeksekusi file</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="E" class="mt-1"> E. Owner hanya bisa Read, Group bisa Write</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 6 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">6. Sebuah folder <code class="bg-slate-200 px-1 rounded text-xs">/var/www/html</code> harus bisa dimasuki (execute) dan dibaca isinya oleh publik (others) saat web diakses. Hak akses direktori yang direkomendasikan adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="A" class="mt-1"> A. chmod 400</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="B" class="mt-1"> B. chmod 755</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="C" class="mt-1"> C. chmod 666</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="D" class="mt-1"> D. chmod 111</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="E" class="mt-1"> E. chmod 000</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 7 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">7. Anda membuat sebuah script bash <code class="bg-slate-200 px-1 rounded text-xs">backup.sh</code>, tetapi saat dijalankan muncul pesan "Permission Denied". Anda perlu menambahkan hak eksekusi untuk user (u). Perintahnya adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="A" class="mt-1"> A. chmod o+w backup.sh</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="B" class="mt-1"> B. chmod u+x backup.sh</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="C" class="mt-1"> C. chmod g-r backup.sh</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="D" class="mt-1"> D. chown u+e backup.sh</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="E" class="mt-1"> E. chmod u-x backup.sh</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 8 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">8. Saat mengamankan server, sangat berbahaya memberikan hak akses <code class="bg-slate-200 px-1 rounded text-xs">777</code> secara sembarangan karena...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="A" class="mt-1"> A. File menjadi terkunci selamanya</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="B" class="mt-1"> B. Menghapus direktori tanpa ampun</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="C" class="mt-1"> C. Mengganti nama user root</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="D" class="mt-1"> D. Semua orang di sistem bisa membaca, mengedit, bahkan menjalankan virus di file tersebut</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="E" class="mt-1"> E. File akan langsung terenkripsi otomatis</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 9 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">9. Karyawan baru bernama "budi" harus dijadikan pemilik (owner) sah dari file <code class="bg-slate-200 px-1 rounded text-xs">tugas_baru.txt</code>. Perintah CLI yang Anda gunakan adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="A" class="mt-1"> A. chgrp budi tugas_baru.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="B" class="mt-1"> B. chown budi tugas_baru.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="C" class="mt-1"> C. chmod budi tugas_baru.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="D" class="mt-1"> D. useradd budi tugas_baru.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="E" class="mt-1"> E. mv budi tugas_baru.txt</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 10 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">10. Jika Anda ingin mengubah GRUP dari file <code class="bg-slate-200 px-1 rounded text-xs">anggaran.doc</code> menjadi grup 'finance', perintah yang tepat adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="A" class="mt-1"> A. chown finance anggaran.doc</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="B" class="mt-1"> B. chgrp finance anggaran.doc</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="C" class="mt-1"> C. groupadd finance</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="D" class="mt-1"> D. chmod g+f anggaran.doc</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="E" class="mt-1"> E. switch finance anggaran.doc</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 11 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">11. Manajer IT meminta agar kepemilikan user dan grup pada <code class="bg-slate-200 px-1 rounded text-xs">rahasia.txt</code> diubah <b>sekaligus</b> menjadi user 'admin' dan grup 'sysadmin'. Perintahnya adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="A" class="mt-1"> A. chown admin:sysadmin rahasia.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="B" class="mt-1"> B. chmod admin+sysadmin rahasia.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="C" class="mt-1"> C. chgrp admin sysadmin rahasia.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="D" class="mt-1"> D. chown sysadmin admin rahasia.txt</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="E" class="mt-1"> E. usergroup admin sysadmin</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 12 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">12. Anda baru memindahkan ratusan file ke dalam folder <code class="bg-slate-200 px-1 rounded text-xs">/var/www/web_baru</code>. Agar <b>seluruh</b> file di dalamnya ikut menjadi milik user 'www-data', parameter apa yang harus ditambahkan pada chown?</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="A" class="mt-1"> A. -f</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="B" class="mt-1"> B. -v</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="C" class="mt-1"> C. -R (Recursive)</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="D" class="mt-1"> D. -all</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="E" class="mt-1"> E. -x</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 13 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">13. Saat Anda (user biasa bernama 'budi') mencoba menjalankan <code class="bg-slate-200 px-1 rounded text-xs">chown root konfigurasi.conf</code>, Anda mendapati error "Operation not permitted". Mengapa?</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="A" class="mt-1"> A. Komputer belum terkoneksi ke internet</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="B" class="mt-1"> B. User biasa tidak memiliki izin administrator (Root) untuk mengubah kepemilikan file krusial</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="C" class="mt-1"> C. File tersebut sudah terhapus</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="D" class="mt-1"> D. Perintah chown sudah usang</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="E" class="mt-1"> E. Salah mengetik nama file</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 14 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">14. Solusi dari permasalahan "Operation not permitted" pada soal nomor 13, jika 'budi' punya wewenang admin, adalah menambah perintah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="A" class="mt-1"> A. super</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="B" class="mt-1"> B. root</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="C" class="mt-1"> C. sudo di awal baris perintah</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="D" class="mt-1"> D. force</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="E" class="mt-1"> E. pass</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 15 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">15. String permission <code class="bg-slate-200 px-1 rounded text-xs">-rw-r--r--</code> memiliki arti oktal...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="A" class="mt-1"> A. 644</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="B" class="mt-1"> B. 755</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="C" class="mt-1"> C. 777</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="D" class="mt-1"> D. 400</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="E" class="mt-1"> E. 600</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 16 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">16. Tanda minus <code class="bg-slate-200 px-1 rounded text-xs">-</code> di karakter pertama dari string permission <code class="bg-slate-200 px-1 rounded text-xs">-rw-r--r--</code> menunjukkan bahwa item tersebut adalah sebuah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="A" class="mt-1"> A. Direktori / Folder</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="B" class="mt-1"> B. File biasa (Regular file)</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="C" class="mt-1"> C. Link / Shortcut</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="D" class="mt-1"> D. Virus</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="E" class="mt-1"> E. Error system</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 17 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">17. Jika karakter awalnya adalah <code class="bg-slate-200 px-1 rounded text-xs">d</code> seperti <code class="bg-slate-200 px-1 rounded text-xs">drwxr-xr-x</code>, berarti item tersebut adalah...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="A" class="mt-1"> A. Downloaded file</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="B" class="mt-1"> B. Direktori / Folder</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="C" class="mt-1"> C. Daemon</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="D" class="mt-1"> D. Disk Drive</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="E" class="mt-1"> E. Deleted</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 18 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">18. Hak akses "Write" ditandai dengan angka oktal...</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="A" class="mt-1"> A. 1</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="B" class="mt-1"> B. 2</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="C" class="mt-1"> C. 4</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="D" class="mt-1"> D. 0</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="E" class="mt-1"> E. 7</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 19 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">19. Jika Anda menjumlahkan hak akses "Read" (4) dan "Execute" (1) untuk mengizinkan user membuka direktori dan melihat isinya, berapakah angka total yang Anda gunakan?</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="A" class="mt-1"> A. 3</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="B" class="mt-1"> B. 4</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="C" class="mt-1"> C. 6</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="D" class="mt-1"> D. 5</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="E" class="mt-1"> E. 7</label>
+                        </div>
+                    </div>
+
+                    <!-- Soal 20 -->
+                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm font-semibold text-slate-700 mb-3">20. Kesimpulan: Mengapa menguasai perintah Permission & Ownership penting di dunia kerja?</p>
+                        <div class="space-y-2 text-sm text-slate-600">
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="A" class="mt-1"> A. Untuk mencegah kebocoran data (Security) dan menjaga privasi konfigurasi sistem perusahaan dari akses tidak sah.</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="B" class="mt-1"> B. Agar server terlihat keren</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="C" class="mt-1"> C. Karena bisa meningkatkan kecepatan koneksi internet</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="D" class="mt-1"> D. Untuk mengubah antarmuka menjadi grafis GUI</label>
+                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="E" class="mt-1"> E. Supaya kapasitas Harddisk server tidak cepat penuh</label>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- FOOTER ACTIONS -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg">
+                <p class="text-xs text-slate-400">Periksa kembali tabel observasi dan uji kompetensi LKPD 3 sebelum mengirim jawaban.</p>
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button onclick="resetForm()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+                        Reset Form
+                    </button>
+                    <button onclick="simpanDanKirimKeSheet()" id="btnKirim" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+                        <i class="fa-solid fa-paper-plane"></i> Submit LKPD 3
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- CUSTOM MODAL -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform scale-95 transition-transform duration-300" id="modalBox">
+            <div id="modalIcon" class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-2xl ring-4 ring-emerald-50/50">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <h3 id="modalTitle" class="font-bold text-slate-800 text-lg">Berhasil!</h3>
+                <p id="modalMessage" class="text-sm text-slate-500 mt-1 leading-relaxed whitespace-pre-wrap">Pesan sistem.</p>
+            </div>
+            <button onclick="tutupModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2.5 rounded-xl transition-colors mt-2">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Set Time
+        document.getElementById('displayNama').textContent = "Belum ada identitas";
+
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKobXS04KegNkLJ-T6_hXryh3eCGUmSWuz5bQiWUz4fTiUsDTtqNACO_eTYSfFevjSEA/exec"; 
+        let waktuMulai = 0;
+        let masterDataSiswa = [];
+        
+        // Data base CSV string (Persis Sesuai Master Data)
+        const csvDataSiswa = `Sekolah,Kelas,Nama Lengkap
+SMK NEGERI 1 SINGKAWANG,X TJK,01 ALVINO
+SMK NEGERI 1 SINGKAWANG,X TJK,02 DEBORA RATU GIASTA GULTOM
+SMK NEGERI 1 SINGKAWANG,X TJK,03 DENIS
+SMK NEGERI 1 SINGKAWANG,X TJK,04 DEO REVALDY AHMAD
+SMK NEGERI 1 SINGKAWANG,X TJK,05 EVAN KRESNA LEE
+SMK NEGERI 1 SINGKAWANG,X TJK,06 FEBRIYANTO
+SMK NEGERI 1 SINGKAWANG,X TJK,07 HERKULANUS PERDY
+SMK NEGERI 1 SINGKAWANG,X TJK,08 HIQMAL LIONEL ALVIANO
+SMK NEGERI 1 SINGKAWANG,X TJK,09 INDRA KESUMAH
+SMK NEGERI 1 SINGKAWANG,X TJK,10 JERRY KURNIAWAN
+SMK NEGERI 1 SINGKAWANG,X TJK,11 KABILA SYIFA
+SMK NEGERI 1 SINGKAWANG,X TJK,12 KEYLA KIRANA PUTRI
+SMK NEGERI 1 SINGKAWANG,X TJK,13 KRISTIAN DAFI
+SMK NEGERI 1 SINGKAWANG,X TJK,14 LIONEL VAN EXAUDI HUTABARAT
+SMK NEGERI 1 SINGKAWANG,X TJK,15 MIRATUL TASYA RAMADHANI
+SMK NEGERI 1 SINGKAWANG,X TJK,16 MUHAMMAD RAYHAN AL GHIFARY
+SMK NEGERI 1 SINGKAWANG,X TJK,17 MUHAMMAD ZAKY RAFANANDO
+SMK NEGERI 1 SINGKAWANG,X TJK,18 NATARI KEYZA JUNIAR
+SMK NEGERI 1 SINGKAWANG,X TJK,19 NAZUA KASTINA
+SMK NEGERI 1 SINGKAWANG,X TJK,20 NUR AZANI
+SMK NEGERI 1 SINGKAWANG,X TJK,21 NURAINI
+SMK NEGERI 1 SINGKAWANG,X TJK,22 PIRANDA RAMADANI
+SMK NEGERI 1 SINGKAWANG,X TJK,23 REBHELIA
+SMK NEGERI 1 SINGKAWANG,X TJK,24 REVAN
+SMK NEGERI 1 SINGKAWANG,X TJK,25 RIA ADHA
+SMK NEGERI 1 SINGKAWANG,X TJK,26 RINDU PRANITA NUARI
+SMK NEGERI 1 SINGKAWANG,X TJK,27 RIVALDO RANGGA SAPUTRA
+SMK NEGERI 1 SINGKAWANG,X TJK,28 SELVIA
+SMK NEGERI 1 SINGKAWANG,X TJK,29 SITI MARIYAM
+SMK NEGERI 1 SINGKAWANG,X TJK,30 SYIFA FAHIRA
+SMK NEGERI 1 SINGKAWANG,X TJK,31 WULANDARI
+SMK NEGERI 1 SINGKAWANG,X TJK,32 YULIANTI
+SMK NEGERI 1 SINGKAWANG,X TJK,33 YUNKHI
+SMK NEGERI 1 SINGKAWANG,XI TJK,01 RIZKY JUNIANSYAH
+SMK NEGERI 1 SINGKAWANG,XI TJK,02 SEMELIA
+SMK NEGERI 1 SINGKAWANG,XI TJK,03 AHMAD NOVA RIANTO
+SMK NEGERI 1 SINGKAWANG,XI TJK,04 AIDANAZMAN DATINOV
+SMK NEGERI 1 SINGKAWANG,XI TJK,05 AJI SOPYAN DWI
+SMK NEGERI 1 SINGKAWANG,XI TJK,06 ANGELA DARA LISTA
+SMK NEGERI 1 SINGKAWANG,XI TJK,07 ANNISA SALSA SHAFIRA
+SMK NEGERI 1 SINGKAWANG,XI TJK,09 AYRA
+SMK NEGERI 1 SINGKAWANG,XI TJK,10 AZURA
+SMK NEGERI 1 SINGKAWANG,XI TJK,11 BAYU CITRA PRATAMA
+SMK NEGERI 1 SINGKAWANG,XI TJK,12 BUNGA LESTARI
+SMK NEGERI 1 SINGKAWANG,XI TJK,13 CHASTLE ALPHA RICHIE
+SMK NEGERI 1 SINGKAWANG,XI TJK,14 DEVINA YUNA
+SMK NEGERI 1 SINGKAWANG,XI TJK,15 DINDA PUTRI RAHAYU
+SMK NEGERI 1 SINGKAWANG,XI TJK,16 EDWIN PRAYOGA
+SMK NEGERI 1 SINGKAWANG,XI TJK,17 FAJAR JULIANSYAH
+SMK NEGERI 1 SINGKAWANG,XI TJK,18 FRANSISCO DWI ADITYA
+SMK NEGERI 1 SINGKAWANG,XI TJK,19 GABRIEL ARESTA
+SMK NEGERI 1 SINGKAWANG,XI TJK,20 GLORIA ELSIA
+SMK NEGERI 1 SINGKAWANG,XI TJK,21 IHSAN AZHALLAH FAWWAZ
+SMK NEGERI 1 SINGKAWANG,XI TJK,22 INDRAYANI
+SMK NEGERI 1 SINGKAWANG,XI TJK,23 IRFAN RACHMANDANI FERDIAN
+SMK NEGERI 1 SINGKAWANG,XI TJK,24 KEVIN APRILIO
+SMK NEGERI 1 SINGKAWANG,XI TJK,25 KHOIRUNNISA
+SMK NEGERI 1 SINGKAWANG,XI TJK,26 LAFYCA CALYZZA
+SMK NEGERI 1 SINGKAWANG,XI TJK,27 MAHLIK ADI SAPUTRA
+SMK NEGERI 1 SINGKAWANG,XI TJK,28 MUHAMAD ADHA NUR IKHSAN
+SMK NEGERI 1 SINGKAWANG,XI TJK,29 MUHAMMAD NABIL PASHA
+SMK NEGERI 1 SINGKAWANG,XI TJK,30 NURLILA FADILLA
+SMK NEGERI 1 SINGKAWANG,XI TJK,31 RENI
+SMK NEGERI 1 SINGKAWANG,XI TJK,32 RIA KURNIATI
+SMK NEGERI 1 SINGKAWANG,XI TJK,33 RIDWAN RAKA HARTONO
+SMK NEGERI 1 SINGKAWANG,XI TJK,34 SAEPUL MAJID
+SMK NEGERI 1 SINGKAWANG,XI TJK,35 VIONA
+SMK NEGERI 1 SINGKAWANG,XI TJK,36 WAHYU
+SMK MUDITA SINGKAWANG,XI TJKT,01 ALICIA JENIFER
+SMK MUDITA SINGKAWANG,XI TJKT,02 ANGELA
+SMK MUDITA SINGKAWANG,XI TJKT,03 CALVINIUS BUNARTO
+SMK MUDITA SINGKAWANG,XI TJKT,04 CHELSY VEROSSA
+SMK MUDITA SINGKAWANG,XI TJKT,05 DERMAN JOHAN
+SMK MUDITA SINGKAWANG,XI TJKT,06 DESTIAN WIJAYA
+SMK MUDITA SINGKAWANG,XI TJKT,07 DISON NIKANOR
+SMK MUDITA SINGKAWANG,XI TJKT,08 ENNIO EDWARD
+SMK MUDITA SINGKAWANG,XI TJKT,09 FANI VANESA
+SMK MUDITA SINGKAWANG,XI TJKT,10 HANNY PHANGGESTY
+SMK MUDITA SINGKAWANG,XI TJKT,11 HERWIT BRIAN
+SMK MUDITA SINGKAWANG,XI TJKT,12 JAVI YANTO
+SMK MUDITA SINGKAWANG,XI TJKT,13 JEFRY
+SMK MUDITA SINGKAWANG,XI TJKT,14 JONATHAN VINCENTIUS
+SMK MUDITA SINGKAWANG,XI TJKT,15 KELLY ANGELA
+SMK MUDITA SINGKAWANG,XI TJKT,16 KEVIN KURNIAWAN
+SMK MUDITA SINGKAWANG,XI TJKT,17 LEONARDO
+SMK MUDITA SINGKAWANG,XI TJKT,18 LORENZO JONATHAN PANGESTU
+SMK MUDITA SINGKAWANG,XI TJKT,19 MEDY SANJAYA
+SMK MUDITA SINGKAWANG,XI TJKT,20 MEYCHEN CARNELLA
+SMK MUDITA SINGKAWANG,XI TJKT,21 MICHELLE
+SMK MUDITA SINGKAWANG,XI TJKT,22 NESHA FREDELINA XHIAUW
+SMK MUDITA SINGKAWANG,XI TJKT,23 RAYMEND
+SMK MUDITA SINGKAWANG,XI TJKT,24 RICARDO
+SMK MUDITA SINGKAWANG,XI TJKT,25 SUYANBUN LIPFIANDY
+SMK MUDITA SINGKAWANG,XI TJKT,26 TRI WIJAYA
+SMK MUDITA SINGKAWANG,XI TJKT,27 VINCENT
+SMK MUDITA SINGKAWANG,XI TJKT,28 VINCENT ALBERTO FEROZ
+SMK MUDITA SINGKAWANG,XI TJKT,29 VINCENT BUN
+SMK MUDITA SINGKAWANG,XI TJKT,30 VINCENT LAUNARDY
+SMK MUDITA SINGKAWANG,XI TJKT,31 VINSEN
+SMK MUDITA SINGKAWANG,XI TJKT,32 VITO ALBERT FEROZ
+SMK MUDITA SINGKAWANG,XI TJKT,33 VITON
+SMK MUDITA SINGKAWANG,XI TJKT,34 WENNI NINGSI WONGSO
+SMK MUDITA SINGKAWANG,XI TJKT,35 WILLIAM
+SMK MUDITA SINGKAWANG,XI TJKT,36 WILLIAM
+SMK MUDITA SINGKAWANG,XI TJKT,37 WILLIAM
+SMK MUDITA SINGKAWANG,XI TJKT,38 YUVENSIUS
+SMK MUDITA SINGKAWANG,XII TJKT,01 DALVIN ANDERSON
+SMK MUDITA SINGKAWANG,XII TJKT,02 DANNIEL DAVE DAISUKE
+SMK MUDITA SINGKAWANG,XII TJKT,03 DENNY
+SMK MUDITA SINGKAWANG,XII TJKT,04 FERDI NOVENDI
+SMK MUDITA SINGKAWANG,XII TJKT,05 FLOURA
+SMK MUDITA SINGKAWANG,XII TJKT,06 HENGKY
+SMK MUDITA SINGKAWANG,XII TJKT,07 JIU PHEN
+SMK MUDITA SINGKAWANG,XII TJKT,08 JULIANA DELVI WANTRIANI
+SMK MUDITA SINGKAWANG,XII TJKT,09 JULIYANTO
+SMK MUDITA SINGKAWANG,XII TJKT,10 JUN KIUH
+SMK MUDITA SINGKAWANG,XII TJKT,11 JUN PHEN
+SMK MUDITA SINGKAWANG,XII TJKT,12 JUNIATY
+SMK MUDITA SINGKAWANG,XII TJKT,14 KELVIN TERRENCE
+SMK MUDITA SINGKAWANG,XII TJKT,15 LEONARDO
+SMK MUDITA SINGKAWANG,XII TJKT,16 LEWIS MARCO
+SMK MUDITA SINGKAWANG,XII TJKT,17 LI NA
+SMK MUDITA SINGKAWANG,XII TJKT,18 MARCO GENIUS
+SMK MUDITA SINGKAWANG,XII TJKT,19 NELSON ALVARO
+SMK MUDITA SINGKAWANG,XII TJKT,21 NOFIKA
+SMK MUDITA SINGKAWANG,XII TJKT,22 NYIAN BUN
+SMK MUDITA SINGKAWANG,XII TJKT,23 NYUN CU
+SMK MUDITA SINGKAWANG,XII TJKT,24 OKTAVIANI
+SMK MUDITA SINGKAWANG,XII TJKT,25 RENDI
+SMK MUDITA SINGKAWANG,XII TJKT,26 RICO WIJAYA
+SMK MUDITA SINGKAWANG,XII TJKT,27 SI WEN
+SMK MUDITA SINGKAWANG,XII TJKT,28 SIAU KHIM
+SMK MUDITA SINGKAWANG,XII TJKT,29 SU CHUI
+SMK MUDITA SINGKAWANG,XII TJKT,30 TRI DERMERSIA
+SMK MUDITA SINGKAWANG,XII TJKT,31 VELIYAN VINSON
+SMK MUDITA SINGKAWANG,XII TJKT,32 VICKA ANJELICA
+SMK MUDITA SINGKAWANG,XII TJKT,33 WILLIAM
+SMK MUDITA SINGKAWANG,XII TJKT,34 WILLSON HANATA
+SMK MUDITA SINGKAWANG,XII TJKT,35 WILLY VEN`;
+
+        function initDataSiswa() {
+            const lines = csvDataSiswa.trim().split('\n');
+            masterDataSiswa = lines.slice(1).map(line => {
+                const [sekolah, kelas, nama] = line.split(',');
+                return { sekolah: sekolah?.trim(), kelas: kelas?.trim(), nama: nama?.trim() };
+            });
+            populateSekolah();
+        }
+
+        function populateSekolah() {
+            const selectSekolah = document.getElementById('inputSekolah');
+            const sekolahList = [...new Set(masterDataSiswa.map(item => item.sekolah))];
+            selectSekolah.innerHTML = '<option value="">-- Pilih Instansi --</option>';
+            sekolahList.forEach(sekolah => {
+                if(sekolah) {
+                    selectSekolah.innerHTML += `<option value="${sekolah}">${sekolah}</option>`;
+                }
+            });
+        }
+
+        function filterKelas() {
+            const sekolahSelected = document.getElementById('inputSekolah').value;
+            const selectKelas = document.getElementById('inputKelas');
+            const selectNama = document.getElementById('inputNamaLengkap');
+            
+            selectKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
+            
+            if(!sekolahSelected) return;
+            
+            const kelasList = [...new Set(masterDataSiswa
+                .filter(item => item.sekolah === sekolahSelected)
+                .map(item => item.kelas))];
+                
+            kelasList.forEach(kelas => {
+                if(kelas) {
+                    selectKelas.innerHTML += `<option value="${kelas}">${kelas}</option>`;
+                }
+            });
+        }
+
+        function filterNama() {
+            const sekolahSelected = document.getElementById('inputSekolah').value;
+            const kelasSelected = document.getElementById('inputKelas').value;
+            const selectNama = document.getElementById('inputNamaLengkap');
+            
+            selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
+            
+            if(!sekolahSelected || !kelasSelected) return;
+            
+            const namaList = masterDataSiswa
+                .filter(item => item.sekolah === sekolahSelected && item.kelas === kelasSelected)
+                .map(item => item.nama);
+                
+            namaList.forEach(nama => {
+                if(nama) {
+                    selectNama.innerHTML += `<option value="${nama}">${nama}</option>`;
+                }
+            });
+        }
+
+        function simpanIdentitas() {
+            const sekolah = document.getElementById('inputSekolah').value;
+            const kelas = document.getElementById('inputKelas').value;
+            const nama = document.getElementById('inputNamaLengkap').value;
+            
+            if(!sekolah || !kelas || !nama) {
+                tampilkanModal('Peringatan', 'Harap lengkapi semua data identitas terlebih dahulu!', 'fa-triangle-exclamation', 'text-amber-500', 'bg-amber-50');
+                return;
+            }
+            
+            document.getElementById('displayNama').textContent = `${nama} (${kelas})`;
+            const mainContent = document.getElementById('mainContent');
+            mainContent.classList.remove('opacity-40', 'pointer-events-none', 'blur-[1px]');
+            
+            waktuMulai = Date.now();
+            tampilkanModal('Sesi Lab Akses Diterima!', `Identitas Admin Terverifikasi:\n${nama} - ${kelas}\n\nSelamat berpraktikum di Lab Manajemen Hak Akses.`, 'fa-terminal', 'text-emerald-600', 'bg-emerald-50');
+        }
+
+        function tampilkanModal(judul, pesan, iconClass = 'fa-check', iconColor = 'text-emerald-600', iconBg = 'bg-emerald-50') {
+            document.getElementById('modalTitle').textContent = judul;
+            document.getElementById('modalMessage').textContent = pesan;
+            
+            const iconEl = document.getElementById('modalIcon');
+            iconEl.className = `w-14 h-14 rounded-full ${iconBg} ${iconColor} flex items-center justify-center mx-auto text-2xl ring-4 ring-slate-100`;
+            iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+            
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function tutupModal() {
+            const modal = document.getElementById('customModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            for (let i = 1; i <= 10; i++) {
+                const obsEl = document.getElementById(`obs_${i}`);
+                if (obsEl) obsEl.value = '';
+            }
+            document.getElementById('inputSekolah').value = '';
+            filterKelas();
+            document.getElementById('displayNama').textContent = 'Belum ada identitas';
+            
+            const mainContent = document.getElementById('mainContent');
+            mainContent.classList.add('opacity-40', 'pointer-events-none', 'blur-[1px]');
+            
+            tampilkanModal('Reset Selesai', 'Formulir telah dibersihkan.', 'fa-arrow-rotate-left', 'text-slate-600', 'bg-slate-100');
+        }
+
+        function simpanDanKirimKeSheet() {
+            const sekolah = document.getElementById('inputSekolah').value;
+            const kelas = document.getElementById('inputKelas').value;
+            const nama = document.getElementById('inputNamaLengkap').value;
+            
+            if(!sekolah || !kelas || !nama) {
+                tampilkanModal('Gagal Mengirim', 'Identitas siswa belum diisi!', 'fa-circle-xmark', 'text-red-500', 'bg-red-50');
+                return;
+            }
+
+            // Kunci Jawaban Soal PG LKPD 3 
+            const kunciJawaban = {
+                pg1: "A", pg2: "B", pg3: "C", pg4: "A", pg5: "C",
+                pg6: "B", pg7: "B", pg8: "D", pg9: "B", pg10: "B",
+                pg11: "A", pg12: "C", pg13: "B", pg14: "C", pg15: "A",
+                pg16: "B", pg17: "B", pg18: "B", pg19: "D", pg20: "A"
+            };
+
+            const answers = {};
+            let skorBenar = 0;
+            for (let i = 1; i <= 20; i++) {
+                const selected = document.querySelector(`input[name="pg${i}"]:checked`);
+                if (selected) {
+                    answers[`pg${i}`] = selected.value;
+                    if (selected.value === kunciJawaban[`pg${i}`]) {
+                        skorBenar++;
+                    }
+                } else {
+                    answers[`pg${i}`] = "-";
+                }
+            }
+
+            // Ambil data observasi praktikum CLI
+            const observasiData = {};
+            for (let i = 1; i <= 10; i++) {
+                const obsEl = document.getElementById(`obs_${i}`);
+                observasiData[`obs_${i}`] = obsEl ? obsEl.value.trim() : "";
+            }
+
+            const durasiDetik = Math.round((Date.now() - waktuMulai) / 1000);
+            const pilihanLkpdEl = document.getElementById('pilihanLkpd');
+            const pilihanLkpdTerpilih = pilihanLkpdEl ? pilihanLkpdEl.value : "LKPD 3 (ASJ - Manajemen Hak Akses)";
+            const nilaiAkhir = Math.round((skorBenar / 20) * 100);
+            
+            const payload = {
+                sekolah: sekolah,
+                nama_lengkap: nama,
+                pilihan_lkpd: pilihanLkpdTerpilih, 
+                kelas: kelas,
+                durasi_detik: durasiDetik,
+                skor_pg_benar: skorBenar,
+                nilai_akhir: nilaiAkhir,
+                ...observasiData,
+                ...answers
+            };
+
+            const btn = document.getElementById('btnKirim');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim Nilai...';
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                tampilkanModal('Pengiriman Berhasil!', `Nilai LKPD 3 Anda: ${nilaiAkhir}/100\n\nData observasi & hasil ujian berhasil terkirim ke server guru ASJ.`, 'fa-paper-plane', 'text-emerald-600', 'bg-emerald-50');
+            })
+            .catch(err => {
+                tampilkanModal('Error', 'Gagal mengirim data. Periksa koneksi internet Anda.', 'fa-triangle-exclamation', 'text-red-600', 'bg-red-50');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit LKPD 3';
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initDataSiswa);
+        
+        // Virtual Terminal History & Virtual File System (VFS)
+        let termCwd = "/home/siswa";
+        let cmdHistory = [];
+        let historyIndex = -1;
+
+        let vfs = {
+            "/": { type: 'dir', files: ['bin', 'etc', 'home', 'var'] },
+            "/bin": { type: 'dir', files: ['ls', 'pwd', 'mkdir', 'touch', 'rm', 'cp', 'mv', 'cat', 'less', 'head', 'tail', 'grep', 'chmod', 'chown', 'chgrp', 'sudo'] },
+            "/etc": { type: 'dir', files: ['hostname', 'passwd', 'os-release', 'services', 'network', 'nginx', 'hosts'] },
+            "/etc/hostname": { type: 'file', content: "debian-server-asj" },
+            "/etc/passwd": { 
+                type: 'file', 
+                content: "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nsiswa:x:1000:1000:Siswa ASJ:/home/siswa:/bin/bash\n" 
+            },
+            "/etc/os-release": {
+                type: 'file',
+                content: "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\nNAME=\"Debian GNU/Linux\""
+            },
+            "/etc/hosts": { type: 'file', content: "127.0.0.1   localhost\n192.168.1.254   server.sekolah.sch.id" },
+            "/etc/network": { type: 'dir', files: ['interfaces'] },
+            "/etc/network/interfaces": { 
+                type: 'file', 
+                content: "# Local Loopback Interface\nauto lo\niface lo inet loopback\n\n# Primary Network Adapter\nauto eth0\niface eth0 inet static\n  address 192.168.1.254\n  netmask 255.255.255.0" 
+            },
+            "/var": { type: 'dir', files: ['log', 'www'] },
+            "/var/log": { type: 'dir', files: ['syslog', 'auth.log'] },
+            "/var/log/syslog": {
+                type: 'file',
+                content: "[INFO] System booted successfully\n[OK] Network Interface eth0 IP 192.168.1.254 UP\n[ERROR] Failed to bind port 80: Address already in use\n[INFO] System status: HEALTHY"
+            },
+            "/home": { type: 'dir', files: ['siswa'] },
+            "/home/siswa": { type: 'dir', files: ['web.conf', 'notes.txt', 'backup'] },
+            "/home/siswa/web.conf": {
+                type: 'file',
+                content: "server {\n    listen 80;\n    server_name sekolah.sch.id;\n    root /var/www/html;\n}"
+            },
+            "/home/siswa/notes.txt": {
+                type: 'file',
+                content: "Tugas SysAdmin:\n1. Ubah permission file web.conf menjadi 644\n2. Cek error log di /var/log/syslog pakai grep ERROR\n3. Set chown www-data untuk folder web"
+            },
+            "/home/siswa/backup": { type: 'dir', files: [] }
+        };
+
+        // Mock permission data for ls -l
+        let filePermissions = {
+            "/etc": "drwxr-xr-x",
+            "/home": "drwxr-xr-x",
+            "/var": "drwxr-xr-x",
+            "/bin": "drwxr-xr-x",
+            "/etc/hostname": "-rw-r--r--",
+            "/etc/passwd": "-rw-r--r--",
+            "/home/siswa": "drwxr-xr-x",
+            "/home/siswa/web.conf": "-rw-rw-r--",
+            "/home/siswa/notes.txt": "-rw-r--r--",
+            "/home/siswa/backup": "drwxr-xr-x"
+        };
+        
+        let fileOwners = {
+            "/etc": "root root",
+            "/home": "root root",
+            "/var": "root root",
+            "/bin": "root root",
+            "/etc/hostname": "root root",
+            "/etc/passwd": "root root",
+            "/home/siswa": "siswa siswa",
+            "/home/siswa/web.conf": "siswa siswa",
+            "/home/siswa/notes.txt": "siswa siswa",
+            "/home/siswa/backup": "siswa siswa"
+        };
+
+        const termInput = document.getElementById('termInput');
+        const typingArea = document.getElementById('typingArea');
+        const termOutput = document.getElementById('termOutput');
+        const promptText = document.getElementById('promptText');
+        const terminalBox = document.getElementById('terminalBox');
+
+        function focusTerminal() { termInput.focus(); }
+        function updateTyping() { typingArea.textContent = termInput.value; }
+
+        function getPromptPath() {
+            if (termCwd === "/home/siswa") return "~";
+            if (termCwd.startsWith("/home/siswa/")) return "~" + termCwd.substring(11);
+            return termCwd;
+        }
+
+        function updatePrompt() {
+            promptText.textContent = `siswa@server:${getPromptPath()}$`;
+        }
+
+        function printLine(htmlText) {
+            const div = document.createElement('div');
+            div.innerHTML = htmlText;
+            termOutput.appendChild(div);
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function resolvePath(p) {
+            if (!p) return termCwd;
+            if (p === "/") return "/";
+            if (p === "~") return "/home/siswa";
+            
+            let parts = p.split('/');
+            let currentPath = p.startsWith('/') ? [] : termCwd === '/' ? [] : termCwd.split('/').filter(Boolean);
+
+            for (let part of parts) {
+                if (part === "" || part === ".") continue;
+                if (part === "..") {
+                    if (currentPath.length > 0) currentPath.pop();
+                } else {
+                    currentPath.push(part);
+                }
+            }
+            let resolved = "/" + currentPath.join('/');
+            return resolved === "" ? "/" : resolved;
+        }
+
+        function getNode(path) {
+            if (path === "/") return vfs["/"];
+            return vfs[path];
+        }
+
+        function getFilePerm(path) {
+            return filePermissions[path] || (vfs[path]?.type === 'dir' ? "drwxr-xr-x" : "-rw-r--r--");
+        }
+        function getFileOwner(path) {
+            return fileOwners[path] || (path.startsWith("/home/siswa") ? "siswa siswa" : "root root");
+        }
+
+        function executeCmd(cmdStr) {
+            let args = cmdStr.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+            if (args.length === 0) return;
+            
+            let isSudo = false;
+            if (args[0] === "sudo") {
+                isSudo = true;
+                args.shift(); // remove sudo
+                if (args.length === 0) {
+                    printLine("usage: sudo [command]");
+                    return;
+                }
+            }
+            let cmd = args[0];
+            
+            if (cmd === "clear") {
+                termOutput.innerHTML = "";
+            } else if (cmd === "pwd") {
+                printLine(termCwd);
+            } else if (cmd === "cd") {
+                let target = args[1] || "/home/siswa";
+                let resPath = resolvePath(target);
+                let node = getNode(resPath);
+                
+                if (!node) {
+                    printLine(`bash: cd: ${target}: No such file or directory`);
+                } else if (node.type !== 'dir') {
+                    printLine(`bash: cd: ${target}: Not a directory`);
+                } else {
+                    termCwd = resPath;
+                    updatePrompt();
+                }
+            } else if (cmd === "ls") {
+                let isLong = args.includes("-l");
+                let targetArg = args.find(a => !a.startsWith("-") && a !== "ls") || ".";
+                let targetPath = resolvePath(targetArg);
+                let node = getNode(targetPath);
+                
+                if (!node) {
+                    printLine(`ls: cannot access '${targetArg}': No such file or directory`);
+                    return;
+                }
+                
+                if (node.type === 'file') {
+                    if (isLong) {
+                        let perm = getFilePerm(targetPath);
+                        let owner = getFileOwner(targetPath);
+                        let size = node.content.length;
+                        printLine(`${perm} 1 ${owner} ${size} Jan 10 08:00 ${targetArg}`);
+                    } else {
+                        printLine(targetArg);
+                    }
+                } else {
+                    if (node.files.length === 0) return;
+                    
+                    if (isLong) {
+                        printLine("total " + (node.files.length * 4));
+                        node.files.forEach(f => {
+                            let childPath = targetPath === "/" ? "/" + f : targetPath + "/" + f;
+                            let childPerm = getFilePerm(childPath);
+                            let childOwner = getFileOwner(childPath);
+                            let childNode = getNode(childPath);
+                            let size = childNode?.type === 'file' ? childNode.content.length : 4096;
+                            
+                            let colorClass = childNode?.type === 'dir' ? 'text-blue-400 font-bold' : 'text-slate-300';
+                            printLine(`${childPerm} 1 ${childOwner} ${size} Jan 10 08:00 <span class="${colorClass}">${f}</span>`);
+                        });
+                    } else {
+                        let output = [];
+                        node.files.forEach(f => {
+                            let childPath = targetPath === "/" ? "/" + f : targetPath + "/" + f;
+                            let childNode = getNode(childPath);
+                            let colorClass = childNode?.type === 'dir' ? 'text-blue-400 font-bold' : 'text-slate-300';
+                            output.push(`<span class="${colorClass}">${f}</span>`);
+                        });
+                        printLine(output.join('  '));
+                    }
+                }
+            } else if (cmd === "cat") {
+                if (args.length < 2) {
+                    printLine("cat: missing operand");
+                    return;
+                }
+                let targetPath = resolvePath(args[1]);
+                let node = getNode(targetPath);
+                if (!node) {
+                    printLine(`cat: ${args[1]}: No such file or directory`);
+                } else if (node.type === 'dir') {
+                    printLine(`cat: ${args[1]}: Is a directory`);
+                } else {
+                    if (!isSudo && !targetPath.startsWith("/home/siswa") && (getFilePerm(targetPath).charAt(7) === '-')) {
+                         // Mocking strict permission
+                         if(targetPath === "/etc/shadow") {
+                             printLine(`cat: ${args[1]}: Permission denied`);
+                             return;
+                         }
+                    }
+                    printLine(`<pre class="whitespace-pre-wrap font-mono">${escapeHtml(node.content)}</pre>`);
+                }
+            } else if (cmd === "grep") {
+                if (args.length < 3) {
+                    printLine("grep: missing operand");
+                    return;
+                }
+                let search = args[1].replace(/['"]/g, '');
+                let targetPath = resolvePath(args[2]);
+                let node = getNode(targetPath);
+                
+                if (!node) {
+                    printLine(`grep: ${args[2]}: No such file or directory`);
+                } else if (node.type === 'dir') {
+                    printLine(`grep: ${args[2]}: Is a directory`);
+                } else {
+                    let lines = node.content.split('\n');
+                    lines.forEach(line => {
+                        if (line.includes(search)) {
+                            let regex = new RegExp(search, "g");
+                            let coloredLine = escapeHtml(line).replace(regex, `<span class="grep-match">${search}</span>`);
+                            printLine(coloredLine);
+                        }
+                    });
+                }
+            } else if (cmd === "chmod" || cmd === "chown" || cmd === "chgrp") {
+                if (args.length < 3) {
+                    printLine(`${cmd}: missing operand`);
+                    return;
+                }
+                let targetArg = args[args.length - 1];
+                let targetPath = resolvePath(targetArg);
+                let node = getNode(targetPath);
+                
+                if (!node) {
+                    printLine(`${cmd}: cannot access '${targetArg}': No such file or directory`);
+                    return;
+                }
+                
+                // Permission Denied Check
+                if (!isSudo && !targetPath.startsWith("/home/siswa")) {
+                    printLine(`${cmd}: changing permissions of '${targetArg}': Operation not permitted`);
+                    return;
+                }
+                
+                if (cmd === "chmod") {
+                    let mode = args[1];
+                    let prefix = node.type === 'dir' ? "d" : "-";
+                    // Simplified simulation for practice
+                    if(mode === '777') filePermissions[targetPath] = prefix + "rwxrwxrwx";
+                    else if(mode === '755') filePermissions[targetPath] = prefix + "rwxr-xr-x";
+                    else if(mode === '644') filePermissions[targetPath] = prefix + "rw-r--r--";
+                    else if(mode === '600') filePermissions[targetPath] = prefix + "rw-------";
+                    else if(mode === '400') filePermissions[targetPath] = prefix + "r--------";
+                    else if(mode === 'u+x') filePermissions[targetPath] = prefix + "rwxr-xr-x";
+                    else filePermissions[targetPath] = prefix + "rwxrwxrwx"; // fallback mock
+                } else if (cmd === "chown") {
+                    let newOwner = args[1];
+                    if (newOwner.includes(":")) {
+                        fileOwners[targetPath] = newOwner.replace(":", " ");
+                    } else {
+                        let currentGroup = (getFileOwner(targetPath)).split(" ")[1];
+                        fileOwners[targetPath] = newOwner + " " + currentGroup;
+                    }
+                } else if (cmd === "chgrp") {
+                    let newGroup = args[1];
+                    let currentUser = (getFileOwner(targetPath)).split(" ")[0];
+                    fileOwners[targetPath] = currentUser + " " + newGroup;
+                }
+            } else if (cmd === "echo") {
+                let out = args.slice(1).join(" ").replace(/['"]/g, '');
+                printLine(escapeHtml(out));
+            } else {
+                printLine(`bash: ${cmd}: command not found`);
+            }
+        }
+
+        function handleTermKey(e) {
+            if (e.key === 'Enter') {
+                const rawCmd = termInput.value;
+                const cmdString = rawCmd.trim();
+                printLine(`<span class="text-emerald-400 font-semibold mr-2">siswa@server:${getPromptPath()}$</span>${escapeHtml(rawCmd)}`);
+                
+                if (cmdString !== "") {
+                    cmdHistory.push(rawCmd);
+                    historyIndex = cmdHistory.length;
+                    executeCmd(cmdString);
+                }
+                
+                termInput.value = ""; typingArea.textContent = "";
+                setTimeout(() => { terminalBox.scrollTop = terminalBox.scrollHeight; }, 10);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (cmdHistory.length > 0 && historyIndex > 0) {
+                    historyIndex--;
+                    termInput.value = cmdHistory[historyIndex];
+                    updateTyping();
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < cmdHistory.length - 1) {
+                    historyIndex++;
+                    termInput.value = cmdHistory[historyIndex];
+                } else {
+                    historyIndex = cmdHistory.length;
+                    termInput.value = "";
+                }
+                updateTyping();
+            }
+        }
+
+        // Virtual Keyboard actions
+        function sendVirtualKey(keyName) {
+            termInput.focus();
+            if (keyName === 'Enter') {
+                handleTermKey({ key: 'Enter', preventDefault: () => {} });
+            } else if (keyName === 'ArrowUp') {
+                handleTermKey({ key: 'ArrowUp', preventDefault: () => {} });
+            } else if (keyName === 'ArrowDown') {
+                handleTermKey({ key: 'ArrowDown', preventDefault: () => {} });
+            } else if (keyName === 'Escape') {
+                termInput.value = "";
+                updateTyping();
+            } else if (keyName === 'Tab') {
+                termInput.value += "\t";
+                updateTyping();
+            }
+        }
+        
+        function insertChar(char) {
+            termInput.focus();
+            termInput.value += char;
+            updateTyping();
+        }
+        
+        function sendCtrlC() {
+            termInput.focus();
+            printLine(`<span class="text-emerald-400 font-semibold mr-2">siswa@server:${getPromptPath()}$</span>${escapeHtml(termInput.value)}^C`);
+            termInput.value = "";
+            updateTyping();
+            terminalBox.scrollTop = terminalBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
