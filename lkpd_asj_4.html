@@ -1,662 +1,366 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LKPD 4: Simulasi Pengisian File dhcpd.conf & Pengujian Klien - ASJ</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-mono { font-family: 'Fira Code', monospace; }
-        
-        /* Custom Scrollbar for Terminal */
-        .terminal-scroll::-webkit-scrollbar { width: 8px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #0f172a; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .terminal-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        /* Blinking cursor */
-        .terminal-cursor {
-            display: inline-block;
-            width: 8px;
-            height: 16px;
-            background-color: #38bdf8; /* sky-400 */
-            animation: blink 1s step-end infinite;
-            vertical-align: text-bottom;
-            margin-left: 2px;
-        }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        
-        /* Hidden input */
-        #termInput {
-            opacity: 0;
-            position: absolute;
-            z-index: -10;
-            top: 0;
-        }
-
-        /* Form styling enhancements */
-        .input-focus-ring:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-            border-color: #10b981;
-        }
-        
-        /* Highlight match for grep */
-        .grep-match {
-            background-color: #991b1b;
-            color: #fecaca;
-            font-weight: bold;
-            padding: 0 2px;
-            border-radius: 2px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LKPD 4: Karakteristik Media Transmisi Kabel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .locked-section { opacity: 0.35; pointer-events: none; filter: blur(2px); transition: all 0.4s ease; }
+    .unlocked-section { opacity: 1; pointer-events: auto; filter: blur(0); transition: all 0.4s ease; }
+    .card-kabel { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-kabel:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    canvas { background-color: #0f172a; border-radius: 0.75rem; }
+    @media print {
+      .no-print { display: none !important; }
+      .locked-section { opacity: 1 !important; filter: none !important; pointer-events: auto !important; }
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-emerald-200 selection:text-emerald-900">
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
 
-    <!-- Header Professional SysAdmin Theme -->
-    <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40 shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
-            <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                <!-- Tombol Portal ASJ -->
-                <a href="#" class="group relative inline-flex items-center gap-2 px-3 py-2 text-xs font-mono font-semibold text-emerald-300 bg-slate-950/90 border border-emerald-500/40 rounded-xl overflow-hidden shadow-[0_0_12px_rgba(16,185,129,0.2)] hover:shadow-[0_0_22px_rgba(16,185,129,0.5)] hover:border-emerald-300 hover:text-white transition-all duration-300 backdrop-blur-md active:scale-95">
-                    <span class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-600/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    <i class="fa-solid fa-chevron-left text-emerald-400 group-hover:-translate-x-1 transition-transform duration-200"></i>
-                    <span class="relative z-10 tracking-wider">PORTAL ASJ</span>
-                </a>
+  <header class="bg-indigo-700 text-white shadow-lg no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-4">
+        <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
+          <i class="fa-solid fa-network-wired text-3xl text-amber-400"></i>
+        </div>
+        <div>
+          <span class="text-xs font-semibold tracking-widest text-indigo-200 uppercase">Lembar Kerja Peserta Didik Interaktif</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">LKPD 4: Karakteristik Media Transmisi Kabel</h1>
+          <p class="text-xs sm:text-sm text-indigo-100 mt-1">Pengujian Karakteristik UTP, STP, Coaxial, dan Fiber Optic</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-indigo-800/80 px-4 py-2 rounded-xl text-sm border border-indigo-500/30">
+        <i class="fa-solid fa-graduation-cap text-amber-400"></i>
+        <span class="font-medium" id="status-lkpd-text">Status: Mengisi Identitas</span>
+      </div>
+    </div>
+  </header>
 
-                <div class="bg-emerald-600 p-2 rounded-lg flex items-center justify-center text-white shadow-sm">
-                    <i class="fa-solid fa-network-wired text-xl"></i>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
+
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-2 h-full bg-amber-500"></div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span class="flex items-center justify-center w-7 h-7 bg-amber-100 text-amber-700 rounded-lg text-sm font-bold">1</span>
+          Identitas Peserta Didik
+        </h2>
+        <span class="text-xs bg-amber-50 text-amber-700 font-medium px-3 py-1 rounded-full border border-amber-200" id="identity-status-badge">
+          <i class="fa-solid fa-lock mr-1"></i> Wajib Diisi
+        </span>
+      </div>
+
+      <div id="validation-warning" class="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-800 rounded-r-lg text-sm flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg"></i>
+        <span>Harap lengkapi seluruh identitas di bawah ini untuk membuka materi, simulasi, dan uji kompetensi.</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Sekolah</label>
+          <select id="sel-sekolah" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition" onchange="updateDropdownKelas()">
+            <option value="">-- Pilih Sekolah --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Kelas / Jurusan</label>
+          <select id="sel-kelas" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition disabled:opacity-50 disabled:cursor-not-allowed" onchange="updateDropdownSiswa()" disabled>
+            <option value="">-- Pilih Kelas --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
+          <select id="sel-nama" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition disabled:opacity-50 disabled:cursor-not-allowed" onchange="validateIdentity()" disabled>
+            <option value="">-- Pilih Nama --</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Locked / Unlocked Wrapper -->
+    <div id="main-content" class="locked-section space-y-8">
+
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold">2</span>
+            Ringkasan Materi Media Transmisi Kabel
+          </h2>
+          <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1 rounded-full">Teori Pengantar</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- UTP Card -->
+          <div class="card-kabel bg-white border-t-4 border-indigo-500 rounded-xl p-4 shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-bold text-indigo-900">UTP</h3>
+              <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-mono">100 Ω</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Unshielded Twisted Pair</p>
+            <ul class="text-xs text-slate-600 space-y-1.5">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal text-indigo-500 w-4"></i> Batas: <b>100 meter</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-shield text-rose-400 w-4"></i> Foil: <b>Tidak Ada</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500 w-4"></i> Kekebalan EMI: <b>Rendah</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-plug text-slate-400 w-4"></i> Konektor: <b>RJ-45</b></li>
+            </ul>
+          </div>
+
+          <!-- STP Card -->
+          <div class="card-kabel bg-white border-t-4 border-emerald-500 rounded-xl p-4 shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-bold text-emerald-900">STP</h3>
+              <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">150 Ω</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Shielded Twisted Pair</p>
+            <ul class="text-xs text-slate-600 space-y-1.5">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal text-emerald-500 w-4"></i> Batas: <b>100 meter</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-shield text-emerald-500 w-4"></i> Foil: <b>Foil / Braid</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500 w-4"></i> Kekebalan EMI: <b>Sedang - Tinggi</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-plug text-slate-400 w-4"></i> Konektor: <b>RJ-45 Shielded</b></li>
+            </ul>
+          </div>
+
+          <!-- Coaxial Card -->
+          <div class="card-kabel bg-white border-t-4 border-amber-500 rounded-xl p-4 shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-bold text-amber-900">Coaxial</h3>
+              <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-mono">50 / 75 Ω</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Coaxial Cable</p>
+            <ul class="text-xs text-slate-600 space-y-1.5">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal text-amber-500 w-4"></i> Batas: <b>185m – 500m</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-shield text-amber-500 w-4"></i> Foil: <b>Braid + Metal Foil</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-emerald-500 w-4"></i> Kekebalan EMI: <b>Tinggi</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-plug text-slate-400 w-4"></i> Konektor: <b>BNC / F-Connector</b></li>
+            </ul>
+          </div>
+
+          <!-- Fiber Optic Card -->
+          <div class="card-kabel bg-white border-t-4 border-cyan-500 rounded-xl p-4 shadow-sm border border-slate-200">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-bold text-cyan-900">Fiber Optic</h3>
+              <span class="text-xs bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded font-mono">N/A (Optis)</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Serat Optik</p>
+            <ul class="text-xs text-slate-600 space-y-1.5">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal text-cyan-500 w-4"></i> Batas: <b>2 km – 40+ km</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-shield text-cyan-500 w-4"></i> Pelindung: <b>Armor / Coating</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-emerald-600 w-4"></i> Kekebalan EMI: <b>Sangat Tinggi</b></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-plug text-slate-400 w-4"></i> Konektor: <b>SC / LC / ST / FC</b></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold">3</span>
+            Simulasi Interaktif Karakteristik Sinyal Kabel
+          </h2>
+          <span class="text-xs bg-emerald-100 text-emerald-700 font-semibold px-3 py-1 rounded-full">Real-time Visualizer</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Simulasi 4A -->
+          <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-bolt-lightning text-amber-500"></i> Simulasi 4A: Pengaruh Interferensi EMI
+                </h3>
+                <span id="badge-emi-val" class="text-xs font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">EMI: 0%</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-4">Geser untuk melihat dampak kebisingan elektromagnetik pada bentuk gelombang sinyal transmisi.</p>
+
+              <canvas id="canvas-emi" class="w-full h-36 mb-4 shadow-inner"></canvas>
+
+              <div class="mb-3">
+                <label class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                  <span>Tingkat Interferensi Lingkungan (EMI)</span>
+                  <span id="emi-label-text" class="text-slate-800">0% (Bersih)</span>
+                </label>
+                <input type="range" class="w-full accent-indigo-600 cursor-pointer" id="sim4a-emi" min="0" max="100" value="0" oninput="runSim4A()">
+              </div>
+            </div>
+
+            <div class="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-600 space-y-1">
+              <p id="sim4a-out" class="font-medium text-indigo-900">Kondisi Lingkungan Bersih. UTP & STP dapat menyalurkan data secara stabil.</p>
+              <p class="text-[11px] text-slate-400">*Catatan: Kabel Fiber Optic 100% kebal terhadap gangguan EMI karena mentransmisikan foton (cahaya).</p>
+            </div>
+          </div>
+
+          <!-- Simulasi 4B -->
+          <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-chart-line text-indigo-600"></i> Simulasi 4B: Redaman Sinyal (Attenuation) vs Jarak
+                </h3>
+                <span id="badge-status-sinyal" class="text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Sangat Baik</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-3">Pilih jenis kabel dan jarak untuk menguji degradasi magnitudo gelombang.</p>
+
+              <canvas id="canvas-attenuation" class="w-full h-36 mb-4 shadow-inner"></canvas>
+
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kabel</label>
+                  <select id="sim4b-jenis" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 outline-none" onchange="runSim4B()">
+                    <option value="UTP">UTP (Unshielded)</option>
+                    <option value="STP">STP (Shielded)</option>
+                    <option value="Coaxial">Coaxial</option>
+                    <option value="Fiber Optic">Fiber Optic</option>
+                  </select>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                        <span class="text-[10px] font-bold bg-slate-800 text-emerald-400 px-2 py-0.5 rounded tracking-widest uppercase border border-slate-700">Mata Pelajaran: ASJ</span>
-                        <span class="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded tracking-widest uppercase border border-emerald-500/20"><i class="fa-solid fa-server mr-1"></i>Network Services</span>
-                    </div>
-                    <h1 class="text-lg font-semibold tracking-tight text-slate-100">LKPD 4 : Simulasi Pengisian File dhcpd.conf & Pengujian Klien (DHCP Server)</h1>
+                  <label class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                    <span>Jarak Kabel</span>
+                    <span id="jarak-val-text" class="text-indigo-600 font-bold">100 m</span>
+                  </label>
+                  <input type="range" class="w-full accent-indigo-600 cursor-pointer mt-2" id="sim4b-jarak" min="10" max="1000" step="10" value="100" oninput="runSim4B()">
                 </div>
-            </div>
-            <div class="text-xs font-medium bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 flex items-center shadow-inner">
-                <i class="fa-solid fa-user-gear text-emerald-400 mr-2 text-base"></i>
-                <span id="displayNama" class="text-slate-300">Belum ada identitas</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
-
-        <!-- IDENTITAS SECTION -->
-        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition-all duration-300" id="section-identitas">
-            <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
-                <h2 class="text-sm font-semibold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-id-card-clip text-emerald-600"></i> Identitas Peserta Didik
-                </h2>
-                <span class="text-[10px] text-slate-400 font-medium">Lengkapi identitas untuk mengaktifkan lab</span>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-slate-600">Instansi / Sekolah</label>
-                    <select id="inputSekolah" onchange="filterKelas()" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
-                        <option value="">-- Pilih Instansi --</option>
-                    </select>
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-slate-600">Kelas / Divisi</label>
-                    <select id="inputKelas" onchange="filterNama()" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
-                        <option value="">-- Pilih Kelas --</option>
-                    </select>
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-slate-600">Nama Lengkap</label>
-                    <select id="inputNamaLengkap" class="w-full px-3.5 py-2.5 text-sm text-slate-700 border border-slate-300 rounded-lg bg-slate-50 input-focus-ring cursor-pointer transition-colors">
-                        <option value="">-- Pilih Nama --</option>
-                    </select>
-                </div>
+              </div>
             </div>
 
-            <div class="hidden">
-                <input type="radio" id="pilihanLkpd" name="pilihanLkpd" value="LKPD 4 (ASJ - DHCP Server)" checked>
+            <div class="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-700 flex justify-between items-center">
+              <div>
+                <span class="block text-[11px] text-slate-400">Hasil Pengujian:</span>
+                <span id="sim4b-out" class="font-bold text-slate-800">Jarak: 100m | Redaman: 5.00 dB</span>
+              </div>
+              <button onclick="catatSimulasi()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-plus"></i> Catat Data
+              </button>
             </div>
-
-            <div class="flex justify-end pt-2">
-                <button onclick="simpanIdentitas()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-all shadow-sm hover:shadow flex items-center gap-2">
-                    Masuk Terminal Lab <i class="fa-solid fa-terminal text-xs"></i>
-                </button>
-            </div>
-        </section>
-
-        <!-- MAIN CONTENT (LOCKED INITIALLY) -->
-        <div id="mainContent" class="opacity-40 pointer-events-none transition-opacity duration-500 space-y-6 filter blur-[1px]">
-
-            <!-- INFO CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
-                    <h3 class="font-semibold text-slate-800 mb-3 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-server text-emerald-500"></i> Fokus: Konfigurasi DHCP Server
-                    </h3>
-                    <p class="text-xs text-slate-600 leading-relaxed mb-2">
-                        <strong>DHCP (Dynamic Host Configuration Protocol)</strong> bertugas mendistribusikan alamat IP secara otomatis kepada klien. File utamanya berada di <code>/etc/dhcp/dhcpd.conf</code>.
-                    </p>
-                    <ul class="text-sm text-slate-600 space-y-2 list-none">
-                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> <strong>Subnet & Range:</strong> Menentukan blok IP dan rentang IP yang akan disewakan.</li>
-                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> <strong>Options:</strong> Memberikan informasi tambahan seperti Router (Gateway) dan DNS Server.</li>
-                        <li class="flex items-start gap-2"><i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i> <strong>Lease Time:</strong> Durasi penyewaan IP sebelum klien harus memperbaruinya.</li>
-                    </ul>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-cyan-500">
-                    <h3 class="font-semibold text-slate-800 mb-3 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-network-wired text-cyan-500"></i> Sensasi Kerja Network Admin
-                    </h3>
-                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
-                        Sebagai Administrator Jaringan, Anda bertugas mengonfigurasi layanan agar ratusan komputer klien di perusahaan dapat terhubung ke jaringan tanpa perlu disetting IP statis satu per satu. Anda juga harus memonitor log jika DHCP gagal berjalan.
-                    </p>
-                    <div class="bg-slate-900 text-emerald-400 p-2.5 rounded-lg text-xs font-mono border border-slate-800">
-                        <i class="fa-solid fa-lock text-cyan-400 mr-1"></i> Mode Siswa: Menguji integrasi sistem & command troubleshooting.
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIRTUAL TERMINAL (HACKER / SYSADMIN STYLE) -->
-            <section class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
-                <div class="bg-[#0b1320] rounded-xl overflow-hidden shadow-2xl relative ring-1 ring-slate-800">
-                    <!-- Title Bar -->
-                    <div class="bg-[#131e32] px-4 py-2.5 flex items-center justify-between border-b border-slate-800">
-                        <div class="flex gap-2 w-16">
-                            <div class="w-3 h-3 rounded-full bg-red-500/90 shadow-inner"></div>
-                            <div class="w-3 h-3 rounded-full bg-amber-500/90 shadow-inner"></div>
-                            <div class="w-3 h-3 rounded-full bg-emerald-500/90 shadow-inner"></div>
-                        </div>
-                        <div class="text-xs text-emerald-400/90 font-medium font-mono flex items-center gap-2">
-                            <i class="fa-solid fa-server text-emerald-500"></i> admin@sys-server: /etc & /home — bash
-                        </div>
-                        <div class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-2 py-0.5 rounded font-mono">SSH LIVE</div>
-                    </div>
-                    
-                    <!-- Cheat Sheet Bar -->
-                    <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2 text-xs text-slate-300 font-mono flex flex-wrap items-center justify-between gap-2">
-                        <span><i class="fa-solid fa-lightbulb text-amber-400 mr-1.5"></i> Coba Perintah Teks: 
-                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">cat /etc/network/interfaces</code> | 
-                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">grep ERROR /var/log/syslog</code> | 
-                            <code class="bg-slate-800 text-emerald-300 px-1 py-0.5 rounded">ls -l /etc</code>
-                        </span>
-                    </div>
-
-                    <!-- Terminal Output Area -->
-                    <div class="p-4 h-80 overflow-y-auto terminal-scroll font-mono text-[13px] leading-relaxed cursor-text relative" id="terminalBox" onclick="focusTerminal()">
-                        <div id="termOutput" class="text-slate-300">
-                            <div class="text-emerald-400 font-bold mb-1">Debian GNU/Linux 12 (bookworm) - Server Administrasi ASJ</div>
-                            <div class="text-slate-500 mb-1">System Console - Active Session for Admin</div>
-                            <div class="text-slate-400 text-xs mb-3 border-b border-slate-800 pb-2">Ketik <code class="text-cyan-400 font-bold">ls -l</code> atau <code class="text-cyan-400 font-bold">cat /etc/hostname</code> untuk memulai inspeksi file server.</div>
-                        </div>
-                        <div class="flex items-center text-slate-300 mt-1">
-                            <span class="text-emerald-400 font-semibold mr-2" id="promptText">siswa@server:~$</span>
-                            <span id="typingArea" class="whitespace-pre"></span><span class="terminal-cursor"></span>
-                        </div>
-                        <!-- Hidden Input Box -->
-                        <input type="text" id="termInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" 
-                               oninput="updateTyping()" onkeydown="handleTermKey(event)">
-                    </div>
-
-                    <!-- Termux-style Keyboard Toolbar -->
-                    <div class="bg-[#131e32] px-3 py-2 border-t border-slate-800 flex flex-wrap gap-1.5 justify-center text-xs font-mono select-none">
-                        <button onclick="sendVirtualKey('Escape')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">ESC</button>
-                        <button onclick="sendVirtualKey('Tab')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">TAB</button>
-                        <button onclick="insertChar('/')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">/</button>
-                        <button onclick="insertChar('-')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 font-semibold transition">-</button>
-                        <button onclick="insertChar('grep ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">grep</button>
-                        <button onclick="insertChar('cat ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">cat</button>
-                        <button onclick="insertChar('ls -l ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 font-semibold transition">ls -l</button>
-                        <button onclick="sendVirtualKey('ArrowUp')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 transition">▲</button>
-                        <button onclick="sendVirtualKey('ArrowDown')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-slate-300 rounded border border-slate-700 transition">▼</button>
-                        <button onclick="sendCtrlC()" class="px-2.5 py-1 bg-red-900/40 hover:bg-red-800/60 active:bg-red-600 text-red-300 rounded border border-red-700/50 font-semibold transition">CTRL+C</button>
-                        <button onclick="sendVirtualKey('Enter')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded border border-emerald-500 font-semibold transition shadow-sm">ENTER ↵</button>
-                    </div>
-                </div>
-            </section>
-            <!-- END OF VIRTUAL TERMINAL -->
-
-            <!-- TABEL OBSERVASI PRAKTIKUM CLI -->
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                    <div>
-                        <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-table-list text-emerald-600"></i> Tabel Observasi CLI: Konfigurasi & Uji DHCP
-                        </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Pelajari fungsi setiap perintah di bawah ini dan catat hasilnya untuk memahami siklus DHCP Server dan Klien.</p>
-                    </div>
-                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">10 Perintah Penting</span>
-                </div>
-                
-                <div class="p-4 sm:p-5 overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-slate-800 text-slate-100 font-mono border-b border-slate-700">
-                                <th class="p-3 text-center w-12 rounded-tl-lg">No</th>
-                                <th class="p-3 min-w-[200px]">Perintah CLI Server/Klien</th>
-                                <th class="p-3 min-w-[260px]">Deskripsi Fungsi Sistem</th>
-                                <th class="p-3 min-w-[280px] rounded-tr-lg">Catatan Analisa Kamu</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 text-slate-700">
-                            <!-- Item 1-10 Generate -->
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">1</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">nano /etc/dhcp/dhcpd.conf</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Membuka dan mengedit file konfigurasi utama DHCP server untuk menentukan subnet, range IP, router, dan DNS server.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_1" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">2</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">systemctl restart isc-dhcp-server</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Memulai ulang layanan DHCP server. Wajib dilakukan setiap kali ada perubahan pada file konfigurasi dhcpd.conf agar diterapkan.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_2" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">3</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">systemctl status isc-dhcp-server</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Mengecek status layanan DHCP server. Berfungsi memastikan apakah service berjalan normal (active/running) atau terjadi error (failed).</td>
-                                <td class="p-3">
-                                    <textarea id="obs_3" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">4</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">systemctl enable isc-dhcp-server</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Mengonfigurasi layanan DHCP agar otomatis menyala (autostart) ketika server melakukan proses booting atau dihidupkan ulang.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_4" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">5</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">ip a</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Singkatan dari 'ip address'. Menampilkan seluruh antarmuka jaringan (seperti eth0/enp0s3) beserta IP address yang terpasang.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_5" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">6</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">dhclient -r</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Perintah di sisi KLIEN untuk melepaskan (release) alamat IP dinamis yang sedang digunakan, membersihkan konfigurasi jaringan klien.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_6" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">7</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">dhclient</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Perintah di sisi KLIEN untuk meminta (request/renew) IP address baru beserta konfigurasi gateway dan DNS dari DHCP server.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_7" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">8</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">cat /var/lib/dhcp/dhcpd.leases</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Melihat file catatan (log) dari server mengenai alamat IP mana saja yang sedang disewakan beserta informasi MAC address klien.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_8" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">9</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">tail -f /var/log/syslog</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Menampilkan log sistem secara real-time. Sangat ampuh digunakan saat troubleshooting jika service DHCP failed untuk melihat detail penyebab error.</td>
-                                <td class="p-3">
-                                    <textarea id="obs_9" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-3 text-center font-bold text-slate-500 bg-slate-50/50">10</td>
-                                <td class="p-3 font-mono font-semibold text-emerald-700 bg-slate-50/30">
-                                    <code class="bg-slate-100 border border-slate-200 px-2 py-1 rounded text-emerald-700 select-all block">ping [IP_Gateway]</code>
-                                </td>
-                                <td class="p-3 leading-relaxed">Menguji konektivitas jaringan. Jika klien DHCP sudah mendapat IP yang benar, ia seharusnya bisa menge-ping alamat IP gateway (server).</td>
-                                <td class="p-3">
-                                    <textarea id="obs_10" rows="2" class="w-full p-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono bg-slate-50 focus:bg-white transition" placeholder="Tuliskan pemahamanmu..."></textarea>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- SOAL UJI KOMPETENSI LKPD 4: SKENARIO DUNIA KERJA -->
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex justify-between items-center">
-                    <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-list-check text-emerald-600"></i> Uji Kompetensi LKPD 4: Konfigurasi & Troubleshooting DHCP
-                    </h3>
-                    <span class="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-medium">Skor Maksimal: 100</span>
-                </div>
-                
-                <div class="px-5 py-3 bg-emerald-50 border-b border-emerald-100 text-sm text-slate-700">
-                    <strong>SKENARIO KERJA:</strong> Perusahaan Anda menambahkan divisi baru dengan 50 komputer klien. Anda diminta menyiapkan jaringan otomatis (DHCP) agar semua komputer mendapatkan konfigurasi IP, Gateway, dan DNS secara mandiri saat dihidupkan.
-                </div>
-
-                <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <!-- Soal 1 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">1. Di dalam Linux (misal Debian/Ubuntu), file konfigurasi utama untuk mengatur DHCP server adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="A" class="mt-1"> A. /etc/network/interfaces</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="B" class="mt-1"> B. /etc/dhcp/dhcpd.conf</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="C" class="mt-1"> C. /var/www/html</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="D" class="mt-1"> D. /etc/resolv.conf</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg1" value="E" class="mt-1"> E. /var/log/syslog</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 2 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">2. Parameter di dhcpd.conf yang digunakan untuk mendeklarasikan alamat jaringan utama beserta subnet mask-nya adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="A" class="mt-1"> A. subnet ... netmask ...</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="B" class="mt-1"> B. range ... to ...</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="C" class="mt-1"> C. option routers</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="D" class="mt-1"> D. host client1</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg2" value="E" class="mt-1"> E. default-lease-time</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 3 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">3. Jika Anda ingin memberikan IP otomatis mulai dari 192.168.10.50 hingga 192.168.10.100, parameter yang Anda ketikkan adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="A" class="mt-1"> A. limit 192.168.10.50 192.168.10.100;</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="B" class="mt-1"> B. distribute 192.168.10.50 - 192.168.10.100;</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="C" class="mt-1"> C. range 192.168.10.50 192.168.10.100;</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="D" class="mt-1"> D. ip-pool 192.168.10.50 to 192.168.10.100;</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg3" value="E" class="mt-1"> E. subnet-range 50 100;</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 4 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">4. Untuk memberikan informasi alamat Gateway/Router kepada klien, baris opsi yang digunakan adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="A" class="mt-1"> A. option gateway-address</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="B" class="mt-1"> B. option default-gateway</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="C" class="mt-1"> C. set gateway</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="D" class="mt-1"> D. option routers</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg4" value="E" class="mt-1"> E. router-ip</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 5 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">5. Agar klien bisa mengakses internet dengan domain (seperti google.com), DHCP server perlu menyebarkan IP DNS. Opsi yang digunakan adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="A" class="mt-1"> A. option dns-ip</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="B" class="mt-1"> B. name-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="C" class="mt-1"> C. dns-address</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="D" class="mt-1"> D. option resolve-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg5" value="E" class="mt-1"> E. option domain-name-servers</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 6 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">6. Parameter <code>default-lease-time</code> dalam konfigurasi DHCP berfungsi untuk...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="A" class="mt-1"> A. Menentukan waktu pinjam IP standar dalam satuan detik jika klien tidak meminta spesifik</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="B" class="mt-1"> B. Mengatur batas maksimal waktu restart service</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="C" class="mt-1"> C. Waktu tunda sebelum DHCP server menyala</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="D" class="mt-1"> D. Batas waktu klien melakukan booting</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg6" value="E" class="mt-1"> E. Mengatur batas jumlah klien yang terkoneksi</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 7 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">7. Jika seorang klien meminta sewa IP lebih lama dari standar, server membatasi batas mentok durasinya menggunakan parameter...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="A" class="mt-1"> A. limit-time</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="B" class="mt-1"> B. max-lease-time</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="C" class="mt-1"> C. timeout-lease</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="D" class="mt-1"> D. max-time-limit</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg7" value="E" class="mt-1"> E. strict-lease</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 8 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">8. Setelah Anda selesai mengedit dan menyimpan dhcpd.conf, langkah <b>wajib</b> selanjutnya agar konfigurasi diterapkan adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="A" class="mt-1"> A. Merestart komputer server secara paksa</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="B" class="mt-1"> B. Mencabut kabel LAN</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="C" class="mt-1"> C. Menjalankan perintah systemctl restart isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="D" class="mt-1"> D. Mematikan fitur jaringan</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg8" value="E" class="mt-1"> E. Menghapus konfigurasi jaringan klien</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 9 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">9. Untuk mengecek apakah layanan DHCP sedang berjalan (running) dengan baik atau mengalami error (failed), Anda mengetikkan perintah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="A" class="mt-1"> A. systemctl enable isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="B" class="mt-1"> B. service dhcp start</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="C" class="mt-1"> C. netstat -tulnp | grep dhcp</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="D" class="mt-1"> D. systemctl status isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg9" value="E" class="mt-1"> E. cek-dhcp-sekarang</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 10 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">10. Agar layanan DHCP selalu menyala secara otomatis ketika komputer server baru dihidupkan (reboot), Anda perlu menggunakan argumen...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="A" class="mt-1"> A. systemctl enable isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="B" class="mt-1"> B. systemctl autostart isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="C" class="mt-1"> C. systemctl boot isc-dhcp-server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="D" class="mt-1"> D. chkconfig dhcp on</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg10" value="E" class="mt-1"> E. auto-run isc-dhcp-server</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 11 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">11. Anda ingin mengecek alamat IP yang terpasang pada antarmuka Linux (misal eth0). Perintah singkat yang bisa Anda gunakan selain <code>ifconfig</code> adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="A" class="mt-1"> A. ip check</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="B" class="mt-1"> B. ip a</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="C" class="mt-1"> C. net show</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="D" class="mt-1"> D. list ip</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg11" value="E" class="mt-1"> E. show interface</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 12 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">12. Di komputer Klien (Linux), Anda ingin membuang (release) IP DHCP lama yang bermasalah. Perintahnya adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="A" class="mt-1"> A. dhcp-drop</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="B" class="mt-1"> B. ip release</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="C" class="mt-1"> C. dhclient -r</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="D" class="mt-1"> D. ifconfig eth0 clean</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg12" value="E" class="mt-1"> E. systemctl stop network</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 13 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">13. Setelah IP direlease, klien Klien (Linux) harus meminta kembali konfigurasi IP baru ke server DHCP. Perintah yang diketik adalah...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="A" class="mt-1"> A. dhclient</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="B" class="mt-1"> B. get-ip</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="C" class="mt-1"> C. dhclient renew</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="D" class="mt-1"> D. ip request</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg13" value="E" class="mt-1"> E. dhcp-request</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 14 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">14. Saat merestart layanan DHCP server, tiba-tiba gagal (failed). File log mana yang paling tepat untuk dicek dengan perintah <code>tail -f</code> atau <code>grep</code>?</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="A" class="mt-1"> A. /var/log/auth.log</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="B" class="mt-1"> B. /var/log/syslog</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="C" class="mt-1"> C. /etc/dhcp/error.log</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="D" class="mt-1"> D. /var/log/apache2/error.log</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg14" value="E" class="mt-1"> E. /var/log/boot.log</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 15 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">15. Server DHCP menyimpan daftar IP yang sedang disewakan berserta alamat MAC klien di dalam sebuah file bernama...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="A" class="mt-1"> A. /etc/dhcp/clients.conf</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="B" class="mt-1"> B. /var/log/dhcp.log</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="C" class="mt-1"> C. /etc/network/leases</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="D" class="mt-1"> D. /var/run/dhcpd.pid</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg15" value="E" class="mt-1"> E. /var/lib/dhcp/dhcpd.leases</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 16 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">16. Mengapa melakukan `ping [IP_Gateway]` dari klien penting setelah mengonfigurasi DHCP?</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="A" class="mt-1"> A. Membuktikan bahwa klien berhasil mendapat IP yang tepat dan rute ke jaringan server terbuka</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="B" class="mt-1"> B. Untuk merestart server dari jarak jauh</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="C" class="mt-1"> C. Mengganti alamat MAC secara dinamis</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="D" class="mt-1"> D. Memaksa server membagikan file konfigurasi</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg16" value="E" class="mt-1"> E. Mengosongkan memori (RAM) pada server</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 17 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">17. Konsep "Lease" dalam DHCP berarti...</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="A" class="mt-1"> A. IP diberikan permanen seumur hidup untuk satu perangkat</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="B" class="mt-1"> B. Server memblokir klien yang tidak dikenal</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="C" class="mt-1"> C. IP dipinjamkan sementara, jika waktu habis harus diperbarui oleh klien</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="D" class="mt-1"> D. Konversi nama domain ke IP</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg17" value="E" class="mt-1"> E. Kecepatan maksimal koneksi internet yang diperbolehkan</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 18 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">18. Anda telah mengetik perintah konfigurasi di `dhcpd.conf`. Saat merestart dhcp server muncul tulisan `Job for isc-dhcp-server.service failed`. Apa penyebab paling umum dari hal ini?</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="A" class="mt-1"> A. Klien belum dihidupkan</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="B" class="mt-1"> B. Harddisk server penuh</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="C" class="mt-1"> C. Server membutuhkan izin akses root dua kali</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="D" class="mt-1"> D. Terdapat salah ketik (typo) atau kurang tanda titik koma (;) di dalam file dhcpd.conf</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg18" value="E" class="mt-1"> E. Antivirus memblokir layanan jaringan</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 19 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">19. Klien Windows / Linux gagal mendapatkan IP (atau mendapat IP 169.254.x.x). Padahal service DHCP server statusnya `active (running)`. Apa kemungkinan penyebabnya?</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="A" class="mt-1"> A. Mouse klien tidak berfungsi</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="B" class="mt-1"> B. Kabel LAN klien terputus, atau jangkauan IP (range) di server sudah habis disewa klien lain</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="C" class="mt-1"> C. Server belum diinstal web server</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="D" class="mt-1"> D. Versi Linux klien terlalu jadul</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg19" value="E" class="mt-1"> E. Klien tidak menggunakan user Administrator</label>
-                        </div>
-                    </div>
-
-                    <!-- Soal 20 -->
-                    <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
-                        <p class="text-sm font-semibold text-slate-700 mb-3">20. Kesimpulan logis: Mengapa perusahaan sangat bergantung pada layanan DHCP alih-alih mengonfigurasi IP Statik pada setiap komputer?</p>
-                        <div class="space-y-2 text-sm text-slate-600">
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="A" class="mt-1"> A. Mengurangi beban kerja admin dalam mengisi IP manual satu per satu serta mencegah IP conflict (bentrok IP).</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="B" class="mt-1"> B. IP statik membuat tagihan internet semakin mahal.</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="C" class="mt-1"> C. Komputer masa kini tidak mendukung IP statik.</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="D" class="mt-1"> D. Mencegah hacker mencuri data.</label>
-                            <label class="flex items-start gap-2 cursor-pointer hover:text-emerald-600 transition-colors"><input type="radio" name="pg20" value="E" class="mt-1"> E. Meningkatkan kecepatan rendering grafis di komputer klien.</label>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- FOOTER ACTIONS -->
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg">
-                <p class="text-xs text-slate-400">Periksa kembali tabel observasi dan uji kompetensi LKPD 4 sebelum mengirim jawaban.</p>
-                <div class="flex gap-3 w-full sm:w-auto">
-                    <button onclick="resetForm()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
-                        Reset Form
-                    </button>
-                    <button onclick="simpanDanKirimKeSheet()" id="btnKirim" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                        <i class="fa-solid fa-paper-plane"></i> Submit LKPD 4
-                    </button>
-                </div>
-            </div>
+          </div>
 
         </div>
-    </main>
+      </section>
 
-    <!-- CUSTOM MODAL -->
-    <div id="customModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 transform scale-95 transition-transform duration-300" id="modalBox">
-            <div id="modalIcon" class="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-2xl ring-4 ring-emerald-50/50">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <div>
-                <h3 id="modalTitle" class="font-bold text-slate-800 text-lg">Berhasil!</h3>
-                <p id="modalMessage" class="text-sm text-slate-500 mt-1 leading-relaxed whitespace-pre-wrap">Pesan sistem.</p>
-            </div>
-            <button onclick="tutupModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2.5 rounded-xl transition-colors mt-2">
-                Mengerti
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold">4</span>
+              Tabel Pengamatan Praktikum
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Catatan log hasil uji simulasi pengujian karakteristik kabel.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="catatSimulasi()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+              <i class="fa-solid fa-add"></i> Tambah Data Simulasi
             </button>
+            <button onclick="exportCSV()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-medium text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+          </div>
         </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left text-xs text-slate-600" id="tbl-pengamatan">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3 text-center w-12">No</th>
+                <th class="px-4 py-3">Jenis Kabel</th>
+                <th class="px-4 py-3">Jarak (m)</th>
+                <th class="px-4 py-3">Redaman (dB)</th>
+                <th class="px-4 py-3">Status Sinyal</th>
+                <th class="px-4 py-3 text-center w-16 no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-body" class="divide-y divide-slate-200 bg-white">
+              <tr id="empty-row">
+                <td colspan="6" class="px-4 py-8 text-center text-slate-400 italic">Belum ada data pengamatan. Klik tombol "+ Catat Data Simulasi" untuk menyimpan hasil.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold">5</span>
+              Uji Kompetensi Media Transmisi Kabel
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Jawablah 20 pertanyaan pilihan ganda berikut dengan cermat.</p>
+          </div>
+          <span class="text-xs font-semibold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">20 Soal PG</span>
+        </div>
+
+        <form id="form-quiz" class="space-y-6">
+          <div id="quiz-container" class="space-y-6"></div>
+        </form>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 no-print flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-xs text-slate-500">
+          <p class="font-semibold text-slate-700">Petunjuk Akhir:</p>
+          <p>Pastikan semua soal uji kompetensi terisi sebelum menekan tombol selesaikan.</p>
+        </div>
+        <div class="flex flex-wrap gap-3 w-full sm:w-auto">
+          <button onclick="resetForm()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-rotate-left"></i> Reset LKPD
+          </button>
+          <button id="btn-submit-lkpd" onclick="selesaikanLKPD()" class="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i> Selesaikan & Kirim LKPD
+          </button>
+          <button id="btn-download-pdf" onclick="cetakLaporan()" class="hidden flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-print"></i> Cetak / Unduh PDF
+          </button>
+        </div>
+      </section>
+
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // Set Time
-        document.getElementById('displayNama').textContent = "Belum ada identitas";
+  </main>
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKobXS04KegNkLJ-T6_hXryh3eCGUmSWuz5bQiWUz4fTiUsDTtqNACO_eTYSfFevjSEA/exec"; 
-        let waktuMulai = 0;
-        let masterDataSiswa = [];
-        
-        // Data base CSV string (Persis Sesuai Master Data)
-        const csvDataSiswa = `Sekolah,Kelas,Nama Lengkap
+  <div id="modal-result" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <h3 class="text-xl font-extrabold text-slate-900">LKPD Berhasil Diselesaikan!</h3>
+        <p class="text-xs text-slate-500 mt-1" id="modal-student-name">Nama Peserta Didik</p>
+
+        <div class="my-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nilai Akhir Uji Kompetensi</p>
+          <div class="text-5xl font-black text-indigo-600 my-2" id="modal-score">0</div>
+          <p class="text-xs text-slate-600" id="modal-score-desc">Keterangan hasil evaluasi</p>
+        </div>
+
+        <div id="status-kirim-gas" class="mb-4 text-xs font-medium text-slate-500 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-check text-emerald-500"></i> Data berhasil dikirim ke server guru.
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-xl transition">
+            Tutup
+          </button>
+          <button onclick="cetakLaporan()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-pdf"></i> Cetak Laporan PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFRNKBD9CT9_qpR2QipBAV-FyJYpA5Z3p82ktdqXOs3ShSKhnvl0Q4HPylR8YFFe1h/exec"; 
+    let waktuMulai = 0;
+    let masterDataSiswa = [];
+    let tableData = [];
+
+    // DATA SISWA LENGKAP YANG TELAH DIINTEGRASIKAN
+    const csvDataSiswa = `Sekolah,Kelas,Nama Lengkap
 SMK NEGERI 1 SINGKAWANG,X TJK,01 ALVINO
 SMK NEGERI 1 SINGKAWANG,X TJK,02 DEBORA RATU GIASTA GULTOM
 SMK NEGERI 1 SINGKAWANG,X TJK,03 DENIS
@@ -797,596 +501,494 @@ SMK MUDITA SINGKAWANG,XII TJKT,33 WILLIAM
 SMK MUDITA SINGKAWANG,XII TJKT,34 WILLSON HANATA
 SMK MUDITA SINGKAWANG,XII TJKT,35 WILLY VEN`;
 
-        function initDataSiswa() {
-            const lines = csvDataSiswa.trim().split('\n');
-            masterDataSiswa = lines.slice(1).map(line => {
-                const [sekolah, kelas, nama] = line.split(',');
-                return { sekolah: sekolah?.trim(), kelas: kelas?.trim(), nama: nama?.trim() };
-            });
-            populateSekolah();
+    let dbSiswaParsed = {};
+
+    function initDatabaseSiswa() {
+      const lines = csvDataSiswa.trim().split('\n');
+      masterDataSiswa = [];
+      dbSiswaParsed = {};
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const parts = line.split(',');
+        if (parts.length >= 3) {
+          const sekolah = parts[0].trim();
+          const kelas = parts[1].trim();
+          const nama = parts[2].trim();
+          
+          masterDataSiswa.push({ sekolah, kelas, nama });
+
+          if (!dbSiswaParsed[sekolah]) dbSiswaParsed[sekolah] = {};
+          if (!dbSiswaParsed[sekolah][kelas]) dbSiswaParsed[sekolah][kelas] = [];
+          dbSiswaParsed[sekolah][kelas].push(nama);
+        }
+      }
+
+      const sekSelect = document.getElementById('sel-sekolah');
+      sekSelect.innerHTML = '<option value="">-- Pilih Sekolah --</option>';
+      Object.keys(dbSiswaParsed).forEach(sek => {
+        sekSelect.add(new Option(sek, sek));
+      });
+    }
+
+    function updateDropdownKelas() {
+      const sek = document.getElementById('sel-sekolah').value;
+      const klsSelect = document.getElementById('sel-kelas');
+      const nmSelect = document.getElementById('sel-nama');
+      
+      klsSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+      nmSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      nmSelect.disabled = true;
+
+      if (sek && dbSiswaParsed[sek]) {
+        klsSelect.disabled = false;
+        Object.keys(dbSiswaParsed[sek]).forEach(k => klsSelect.add(new Option(k, k)));
+      } else {
+        klsSelect.disabled = true;
+      }
+      validateIdentity();
+    }
+
+    function updateDropdownSiswa() {
+      const sek = document.getElementById('sel-sekolah').value;
+      const kls = document.getElementById('sel-kelas').value;
+      const nmSelect = document.getElementById('sel-nama');
+      
+      nmSelect.innerHTML = '<option value="">-- Pilih Nama --</option>';
+      if (sek && kls && dbSiswaParsed[sek][kls]) {
+        nmSelect.disabled = false;
+        dbSiswaParsed[sek][kls].forEach(n => nmSelect.add(new Option(n, n)));
+      } else {
+        nmSelect.disabled = true;
+      }
+      validateIdentity();
+    }
+
+    function validateIdentity() {
+      const sek = document.getElementById('sel-sekolah').value;
+      const kls = document.getElementById('sel-kelas').value;
+      const nm = document.getElementById('sel-nama').value;
+      const warning = document.getElementById('validation-warning');
+      const mainContent = document.getElementById('main-content');
+      const badge = document.getElementById('identity-status-badge');
+      const statusLkpd = document.getElementById('status-lkpd-text');
+
+      if (sek && kls && nm) {
+        warning.classList.add('hidden');
+        mainContent.classList.remove('locked-section');
+        mainContent.classList.add('unlocked-section');
+        badge.className = "text-xs bg-emerald-50 text-emerald-700 font-medium px-3 py-1 rounded-full border border-emerald-200";
+        badge.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Terverifikasi';
+        statusLkpd.innerText = `Siswa: ${nm} (${kls})`;
+
+        if (waktuMulai === 0) {
+          waktuMulai = Date.now();
+        }
+      } else {
+        warning.classList.remove('hidden');
+        mainContent.classList.add('locked-section');
+        mainContent.classList.remove('unlocked-section');
+        badge.className = "text-xs bg-amber-50 text-amber-700 font-medium px-3 py-1 rounded-full border border-amber-200";
+        badge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i> Wajib Diisi';
+        statusLkpd.innerText = "Status: Mengisi Identitas";
+      }
+    }
+
+    const questionBank = [
+      { id: 1, q: "Media transmisi kabel UTP (Unshielded Twisted Pair) secara umum menggunakan jenis konektor...", options: ["A. RJ-11", "B. BNC", "C. RJ-45", "D. SC Fiber", "E. ST Connector"], ans: "C" },
+      { id: 2, q: "Kabel Fiber Optic memindahkan data dalam bentuk...", options: ["A. Arus Listrik", "B. Gelombang Elektromagnetik", "C. Pulsa Cahaya", "D. Frekuensi Radio", "E. Tegangan Analog"], ans: "C" },
+      { id: 3, q: "Keunggulan utama kabel STP (Shielded Twisted Pair) dibandingkan dengan UTP adalah...", options: ["A. Lebih murah dan lentur", "B. Memiliki pelindung foil untuk meredam gangguan EMI", "C. Menggunakan konektor BNC", "D. Bebas dari redaman sinyal", "E. Menggunakan serat kaca"], ans: "B" },
+      { id: 4, q: "Hambatan atau impedansi standar yang dimiliki oleh kabel UTP Cat5e/Cat6 adalah...", options: ["A. 50 Ω", "B. 75 Ω", "C. 100 Ω", "D. 150 Ω", "E. 600 Ω"], ans: "C" },
+      { id: 5, q: "Jenis konektor yang umum dipasangkan pada kabel Coaxial untuk jaringan Thinnet/BNC adalah...", options: ["A. RJ-45", "B. BNC Connector", "C. LC Connector", "D. RJ-11", "E. SFP Slot"], ans: "B" },
+      { id: 6, q: "Jarak maksimum segmen kabel UTP tanpa bantuan repeater/switch agar sinyal tetap stabil adalah...", options: ["A. 50 meter", "B. 100 meter", "C. 185 meter", "D. 500 meter", "E. 1000 meter"], ans: "B" },
+      { id: 7, q: "Pelemahan daya sinyal listrik atau cahaya saat merambat melalui media transmisi kabel dinamakan...", options: ["A. Crosstalk", "B. Bandwidth", "C. Atenuasi (Redaman)", "D. Impedansi", "E. Dispersion"], ans: "C" },
+      { id: 8, q: "Gangguan akibat kebocoran sinyal dari satu pasang kawat ke pasang kawat lainnya di dalam kabel UTP dinamakan...", options: ["A. Interfere Noise", "B. Crosstalk", "C. Attenuation", "D. Thermal Noise", "E. Reflection"], ans: "B" },
+      { id: 9, q: "Serat optik jenis Single-Mode Fiber (SMF) memiliki inti (core) berukuran kecil yaitu sekitar...", options: ["A. 9 Mikrometer", "B. 50 Mikrometer", "C. 62.5 Mikrometer", "D. 100 Mikrometer", "E. 1 Millimeter"], ans: "A" },
+      { id: 10, q: "Kabel Coaxial dengan nilai impedansi 75 Ohm umumnya digunakan untuk transmisi...", options: ["A. Jaringan LAN Thinnet", "B. Sinyal Televisi dan Antena Video", "C. Kabel Telepon Rumah", "D. Jaringan Fiber Backbone", "E. Kabel Serial RS232"], ans: "B" },
+      { id: 11, q: "Berdasarkan standar T568B, urutan warna untuk pin 1, pin 2, dan pin 3 pada kabel UTP secara berurutan adalah...", options: ["A. Putih-Hijau, Hijau, Putih-Oranye", "B. Putih-Oranye, Oranye, Putih-Hijau", "C. Putih-Cokelat, Cokelat, Putih-Biru", "D. Putih-Biru, Biru, Putih-Oranye", "E. Oranye, Putih-Oranye, Hijau"], ans: "B" },
+      { id: 12, q: "Lapisan paling luar dari kabel jaringan yang berfungsi melindungi fisik kabel dari gesekan dan cuaca adalah...", options: ["A. Core", "B. Cladding", "C. Outer Jacket", "D. Shield Foil", "E. Insulator"], ans: "C" },
+      { id: 13, q: "Perbedaan utama antara Multi-Mode Fiber (MMF) dan Single-Mode Fiber (SMF) adalah...", options: ["A. MMF menggunakan transmisi tembaga", "B. MMF memiliki diameter core lebih besar & jarak jangkau lebih pendek", "C. SMF tidak bisa membawa cahaya laser", "D. MMF tidak rentan terhadap lekukan", "E. SMF jauh lebih murah dari UTP"], ans: "B" },
+      { id: 14, q: "Alasan utama mengapa kabel Fiber Optic sangat aman terhadap penyadapan elektromagnetik adalah...", options: ["A. Memiliki ground kawat tebal", "B. Mentransmisikan cahaya bukan sinyal listrik", "C. Memiliki isolasi karet ganda", "D. Bekerja pada tegangan sangat tinggi", "E. Menggunakan frekuensi radio acak"], ans: "B" },
+      { id: 15, q: "Kabel UTP Category 6 (Cat6) dirancang untuk mendukung kecepatan data hingga...", options: ["A. 10 Mbps", "B. 100 Mbps", "C. 1 Gbps hingga 10 Gbps (jarak pendek)", "D. 100 Gbps", "E. 1 Terabit"], ans: "C" },
+      { id: 16, q: "Bagian dari struktur serat optik yang berfungsi memantulkan kembali gelombang cahaya ke dalam inti (core) dinamakan...", options: ["A. Buffer Coating", "B. Cladding", "C. Jacket", "D. Strength Member", "E. Ferrule"], ans: "B" },
+      { id: 17, q: "Untuk menghubungkan dua perangkat sejenis (seperti Switch ke Switch tanpa Auto-MDIX) digunakan susunan kabel UTP jenis...", options: ["A. Straight-Through", "B. Crossover", "C. Rollover", "D. Loopback", "E. Hybrid"], ans: "B" },
+      { id: 18, q: "Nilai hambatan (impedansi) standar untuk kabel STP (Shielded Twisted Pair) adalah...", options: ["A. 50 Ω", "B. 75 Ω", "C. 100 Ω", "D. 150 Ω", "E. 300 Ω"], ans: "D" },
+      { id: 19, q: "Alat praktikum yang digunakan untuk mengetes kontinuitas kawat dan kebenaran urutan pin kabel UTP adalah...", options: ["A. Splicer", "B. OTDR", "C. LAN Cable Tester", "D. Multimeter Analog", "E. Stripper Tool"], ans: "C" },
+      { id: 20, q: "Proses penyambungan dua ujung kabel Fiber Optic secara permanen dengan menggunakan peleburan panas busur listrik disebut...", options: ["A. Mechanical Splicing", "B. Fusion Splicing", "C. Crimping", "D. Soldering", "E. Stripping"], ans: "B" }
+    ];
+
+    let animFrameEmi, animFrameAtt;
+
+    function renderEmiCanvas() {
+      const canvas = document.getElementById('canvas-emi');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const emiVal = parseInt(document.getElementById('sim4a-emi').value);
+
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      const width = canvas.width;
+      const height = canvas.height;
+      let step = 0;
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < width; x += 30) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        }
+        for (let y = 0; y < height; y += 20) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
         }
 
-        function populateSekolah() {
-            const selectSekolah = document.getElementById('inputSekolah');
-            const sekolahList = [...new Set(masterDataSiswa.map(item => item.sekolah))];
-            selectSekolah.innerHTML = '<option value="">-- Pilih Instansi --</option>';
-            sekolahList.forEach(sekolah => {
-                if(sekolah) {
-                    selectSekolah.innerHTML += `<option value="${sekolah}">${sekolah}</option>`;
-                }
-            });
+        ctx.strokeStyle = '#334155';
+        ctx.beginPath(); ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2); ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = emiVal > 50 ? '#f43f5e' : (emiVal > 20 ? '#fbbf24' : '#38bdf8');
+
+        for (let x = 0; x < width; x++) {
+          const freq = 0.05;
+          const amp = 30;
+          const noise = (Math.random() - 0.5) * (emiVal * 0.7);
+          const y = height / 2 + Math.sin((x + step) * freq) * amp + noise;
+
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
         }
+        ctx.stroke();
 
-        function filterKelas() {
-            const sekolahSelected = document.getElementById('inputSekolah').value;
-            const selectKelas = document.getElementById('inputKelas');
-            const selectNama = document.getElementById('inputNamaLengkap');
-            
-            selectKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
-            
-            if(!sekolahSelected) return;
-            
-            const kelasList = [...new Set(masterDataSiswa
-                .filter(item => item.sekolah === sekolahSelected)
-                .map(item => item.kelas))];
-                
-            kelasList.forEach(kelas => {
-                if(kelas) {
-                    selectKelas.innerHTML += `<option value="${kelas}">${kelas}</option>`;
-                }
-            });
-        }
+        step += 2;
+        animFrameEmi = requestAnimationFrame(animate);
+      }
 
-        function filterNama() {
-            const sekolahSelected = document.getElementById('inputSekolah').value;
-            const kelasSelected = document.getElementById('inputKelas').value;
-            const selectNama = document.getElementById('inputNamaLengkap');
-            
-            selectNama.innerHTML = '<option value="">-- Pilih Nama --</option>';
-            
-            if(!sekolahSelected || !kelasSelected) return;
-            
-            const namaList = masterDataSiswa
-                .filter(item => item.sekolah === sekolahSelected && item.kelas === kelasSelected)
-                .map(item => item.nama);
-                
-            namaList.forEach(nama => {
-                if(nama) {
-                    selectNama.innerHTML += `<option value="${nama}">${nama}</option>`;
-                }
-            });
-        }
+      cancelAnimationFrame(animFrameEmi);
+      animate();
+    }
 
-        function simpanIdentitas() {
-            const sekolah = document.getElementById('inputSekolah').value;
-            const kelas = document.getElementById('inputKelas').value;
-            const nama = document.getElementById('inputNamaLengkap').value;
-            
-            if(!sekolah || !kelas || !nama) {
-                tampilkanModal('Peringatan', 'Harap lengkapi semua data identitas terlebih dahulu!', 'fa-triangle-exclamation', 'text-amber-500', 'bg-amber-50');
-                return;
-            }
-            
-            document.getElementById('displayNama').textContent = `${nama} (${kelas})`;
-            const mainContent = document.getElementById('mainContent');
-            mainContent.classList.remove('opacity-40', 'pointer-events-none', 'blur-[1px]');
-            
-            waktuMulai = Date.now();
-            tampilkanModal('Sesi Lab Akses Diterima!', `Identitas Admin Terverifikasi:\n${nama} - ${kelas}\n\nSelamat berpraktikum di Lab Konfigurasi DHCP Server.`, 'fa-terminal', 'text-emerald-600', 'bg-emerald-50');
-        }
+    function runSim4A() {
+      const emi = document.getElementById('sim4a-emi').value;
+      document.getElementById('badge-emi-val').innerText = `EMI: ${emi}%`;
+      document.getElementById('emi-label-text').innerText = `${emi}% ${emi > 60 ? '(Sangat Tinggi)' : emi > 30 ? '(Sedang)' : '(Rendah)'}`;
+      
+      const out = document.getElementById('sim4a-out');
+      if (emi == 0) {
+        out.innerText = "Kondisi Lingkungan Bersih. Sinyal UTP/STP/Coaxial/FO berjalan optimal.";
+      } else if (emi <= 40) {
+        out.innerText = `Interferensi ${emi}%: UTP mulai mengalami sedikit noise. STP dan Coaxial terlindungi oleh shield foil.`;
+      } else {
+        out.innerText = `Interferensi ${emi}% (Tinggi): UTP mengalami distorsi data tinggi! Hanya kabel STP/Coaxial ber-shield dan Fiber Optic yang tetap stabil.`;
+      }
+      renderEmiCanvas();
+    }
 
-        function tampilkanModal(judul, pesan, iconClass = 'fa-check', iconColor = 'text-emerald-600', iconBg = 'bg-emerald-50') {
-            document.getElementById('modalTitle').textContent = judul;
-            document.getElementById('modalMessage').textContent = pesan;
-            
-            const iconEl = document.getElementById('modalIcon');
-            iconEl.className = `w-14 h-14 rounded-full ${iconBg} ${iconColor} flex items-center justify-center mx-auto text-2xl ring-4 ring-slate-100`;
-            iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
-            
-            const modal = document.getElementById('customModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+    let lastSimData = { kabel: "UTP", jarak: 100, redaman: "5.00", status: "Sangat Baik" };
 
-        function tutupModal() {
-            const modal = document.getElementById('customModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+    function renderAttenuationCanvas() {
+      const canvas = document.getElementById('canvas-attenuation');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
 
-        function resetForm() {
-            document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-            for (let i = 1; i <= 10; i++) {
-                const obsEl = document.getElementById(`obs_${i}`);
-                if (obsEl) obsEl.value = '';
-            }
-            document.getElementById('inputSekolah').value = '';
-            filterKelas();
-            document.getElementById('displayNama').textContent = 'Belum ada identitas';
-            
-            const mainContent = document.getElementById('mainContent');
-            mainContent.classList.add('opacity-40', 'pointer-events-none', 'blur-[1px]');
-            
-            tampilkanModal('Reset Selesai', 'Formulir telah dibersihkan.', 'fa-arrow-rotate-left', 'text-slate-600', 'bg-slate-100');
-        }
+      const width = canvas.width;
+      const height = canvas.height;
+      const jenis = document.getElementById('sim4b-jenis').value;
+      const jarak = parseFloat(document.getElementById('sim4b-jarak').value);
 
-        function simpanDanKirimKeSheet() {
-            const sekolah = document.getElementById('inputSekolah').value;
-            const kelas = document.getElementById('inputKelas').value;
-            const nama = document.getElementById('inputNamaLengkap').value;
-            
-            if(!sekolah || !kelas || !nama) {
-                tampilkanModal('Gagal Mengirim', 'Identitas siswa belum diisi!', 'fa-circle-xmark', 'text-red-500', 'bg-red-50');
-                return;
-            }
+      let factor = 0.05;
+      if (jenis === 'STP') factor = 0.04;
+      if (jenis === 'Coaxial') factor = 0.02;
+      if (jenis === 'Fiber Optic') factor = 0.002;
 
-            // Kunci Jawaban Soal PG LKPD 4
-            const kunciJawaban = {
-                pg1: "B", pg2: "A", pg3: "C", pg4: "D", pg5: "E",
-                pg6: "A", pg7: "B", pg8: "C", pg9: "D", pg10: "A",
-                pg11: "B", pg12: "C", pg13: "A", pg14: "B", pg15: "E",
-                pg16: "A", pg17: "C", pg18: "D", pg19: "B", pg20: "A"
-            };
+      const attenuationDb = (jarak * factor).toFixed(2);
+      const ampFactor = Math.max(0.05, 1 - (attenuationDb / 30));
 
-            const answers = {};
-            let skorBenar = 0;
-            for (let i = 1; i <= 20; i++) {
-                const selected = document.querySelector(`input[name="pg${i}"]:checked`);
-                if (selected) {
-                    answers[`pg${i}`] = selected.value;
-                    if (selected.value === kunciJawaban[`pg${i}`]) {
-                        skorBenar++;
-                    }
-                } else {
-                    answers[`pg${i}`] = "-";
-                }
-            }
+      ctx.clearRect(0, 0, width, height);
 
-            // Ambil data observasi praktikum CLI
-            const observasiData = {};
-            for (let i = 1; i <= 10; i++) {
-                const obsEl = document.getElementById(`obs_${i}`);
-                observasiData[`obs_${i}`] = obsEl ? obsEl.value.trim() : "";
-            }
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 30) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+      }
 
-            const durasiDetik = Math.round((Date.now() - waktuMulai) / 1000);
-            const pilihanLkpdEl = document.getElementById('pilihanLkpd');
-            const pilihanLkpdTerpilih = pilihanLkpdEl ? pilihanLkpdEl.value : "LKPD 4 (ASJ - DHCP Server)";
-            const nilaiAkhir = Math.round((skorBenar / 20) * 100);
-            
-            const payload = {
-                sekolah: sekolah,
-                nama_lengkap: nama,
-                pilihan_lkpd: pilihanLkpdTerpilih, 
-                kelas: kelas,
-                durasi_detik: durasiDetik,
-                skor_pg_benar: skorBenar,
-                nilai_akhir: nilaiAkhir,
-                ...observasiData,
-                ...answers
-            };
+      ctx.beginPath();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = ampFactor < 0.2 ? '#f43f5e' : (ampFactor < 0.6 ? '#f59e0b' : '#10b981');
 
-            const btn = document.getElementById('btnKirim');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim Nilai...';
+      for (let x = 0; x < width; x++) {
+        const progress = x / width;
+        const currentAmp = 35 * (1 - (progress * (1 - ampFactor)));
+        const y = height / 2 + Math.sin(x * 0.08) * currentAmp;
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
-                tampilkanModal('Pengiriman Berhasil!', `Nilai LKPD 4 Anda: ${nilaiAkhir}/100\n\nData observasi & hasil ujian berhasil terkirim ke server guru ASJ.`, 'fa-paper-plane', 'text-emerald-600', 'bg-emerald-50');
-            })
-            .catch(err => {
-                tampilkanModal('Error', 'Gagal mengirim data. Periksa koneksi internet Anda.', 'fa-triangle-exclamation', 'text-red-600', 'bg-red-50');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit LKPD 4';
-            });
-        }
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
 
-        window.addEventListener('DOMContentLoaded', initDataSiswa);
-        
-        // Virtual Terminal History & Virtual File System (VFS)
-        let termCwd = "/home/siswa";
-        let cmdHistory = [];
-        let historyIndex = -1;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px Inter';
+      ctx.fillText(`0m`, 10, height - 10);
+      ctx.fillText(`${jarak}m`, width - 40, height - 10);
+    }
 
-        let vfs = {
-            "/": { type: 'dir', files: ['bin', 'etc', 'home', 'var'] },
-            "/bin": { type: 'dir', files: ['ls', 'pwd', 'mkdir', 'touch', 'rm', 'cp', 'mv', 'cat', 'less', 'head', 'tail', 'grep', 'chmod', 'chown', 'chgrp', 'sudo'] },
-            "/etc": { type: 'dir', files: ['hostname', 'passwd', 'os-release', 'services', 'network', 'nginx', 'hosts', 'dhcp'] },
-            "/etc/hostname": { type: 'file', content: "debian-server-asj" },
-            "/etc/passwd": { 
-                type: 'file', 
-                content: "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\nsiswa:x:1000:1000:Siswa ASJ:/home/siswa:/bin/bash\n" 
-            },
-            "/etc/os-release": {
-                type: 'file',
-                content: "PRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\nNAME=\"Debian GNU/Linux\""
-            },
-            "/etc/hosts": { type: 'file', content: "127.0.0.1   localhost\n192.168.1.254   server.sekolah.sch.id" },
-            "/etc/network": { type: 'dir', files: ['interfaces'] },
-            "/etc/network/interfaces": { 
-                type: 'file', 
-                content: "# Local Loopback Interface\nauto lo\niface lo inet loopback\n\n# Primary Network Adapter\nauto eth0\niface eth0 inet static\n  address 192.168.1.254\n  netmask 255.255.255.0" 
-            },
-            "/etc/dhcp": { type: 'dir', files: ['dhcpd.conf'] },
-            "/etc/dhcp/dhcpd.conf": {
-                type: 'file',
-                content: "# Sample configuration file for ISC dhcpd\n\ndefault-lease-time 600;\nmax-lease-time 7200;\n\n# Subnet for client network\nsubnet 192.168.10.0 netmask 255.255.255.0 {\n  range 192.168.10.50 192.168.10.100;\n  option routers 192.168.10.1;\n  option domain-name-servers 8.8.8.8, 8.8.4.4;\n}"
-            },
-            "/var": { type: 'dir', files: ['log', 'www', 'lib'] },
-            "/var/log": { type: 'dir', files: ['syslog', 'auth.log'] },
-            "/var/log/syslog": {
-                type: 'file',
-                content: "[INFO] System booted successfully\n[OK] Network Interface eth0 IP 192.168.1.254 UP\n[ERROR] Failed to bind port 80: Address already in use\n[INFO] System status: HEALTHY\n[INFO] dhcpd: Internet Systems Consortium DHCP Server 4.4.3\n[INFO] dhcpd: Wrote 1 leases to leases file.\n[INFO] dhcpd: Listening on LPF/eth0/08:00:27:8c:12:44/192.168.10.0/24\n[INFO] dhcpd: Sending on   LPF/eth0/08:00:27:8c:12:44/192.168.10.0/24\n[INFO] dhcpd: DHCPDISCOVER from 00:1a:2b:3c:4d:5e via eth0\n[INFO] dhcpd: DHCPOFFER on 192.168.10.50 to 00:1a:2b:3c:4d:5e via eth0\n[INFO] dhcpd: DHCPREQUEST for 192.168.10.50 (192.168.10.1) from 00:1a:2b:3c:4d:5e via eth0\n[INFO] dhcpd: DHCPACK on 192.168.10.50 to 00:1a:2b:3c:4d:5e via eth0"
-            },
-            "/var/lib": { type: 'dir', files: ['dhcp'] },
-            "/var/lib/dhcp": { type: 'dir', files: ['dhcpd.leases'] },
-            "/var/lib/dhcp/dhcpd.leases": {
-                type: 'file',
-                content: "lease 192.168.10.50 {\n  starts 3 2026/08/19 05:00:00;\n  ends 3 2026/08/19 05:10:00;\n  tstp 3 2026/08/19 05:10:00;\n  cltt 3 2026/08/19 05:00:00;\n  binding state active;\n  next binding state free;\n  rewind binding state free;\n  hardware ethernet 00:1a:2b:3c:4d:5e;\n  client-hostname \"PC-Client-01\";\n}"
-            },
-            "/home": { type: 'dir', files: ['siswa'] },
-            "/home/siswa": { type: 'dir', files: ['web.conf', 'notes.txt', 'backup'] },
-            "/home/siswa/web.conf": {
-                type: 'file',
-                content: "server {\n    listen 80;\n    server_name sekolah.sch.id;\n    root /var/www/html;\n}"
-            },
-            "/home/siswa/notes.txt": {
-                type: 'file',
-                content: "Tugas SysAdmin:\n1. Ubah permission file web.conf menjadi 644\n2. Cek error log di /var/log/syslog pakai grep ERROR\n3. Set chown www-data untuk folder web"
-            },
-            "/home/siswa/backup": { type: 'dir', files: [] }
-        };
+    function runSim4B() {
+      const jenis = document.getElementById('sim4b-jenis').value;
+      const jarak = parseFloat(document.getElementById('sim4b-jarak').value);
+      
+      document.getElementById('jarak-val-text').innerText = `${jarak} m`;
 
-        // Mock permission data for ls -l
-        let filePermissions = {
-            "/etc": "drwxr-xr-x",
-            "/home": "drwxr-xr-x",
-            "/var": "drwxr-xr-x",
-            "/bin": "drwxr-xr-x",
-            "/etc/hostname": "-rw-r--r--",
-            "/etc/passwd": "-rw-r--r--",
-            "/etc/dhcp": "drwxr-xr-x",
-            "/etc/dhcp/dhcpd.conf": "-rw-r--r--",
-            "/var/lib/dhcp/dhcpd.leases": "-rw-r--r--",
-            "/home/siswa": "drwxr-xr-x",
-            "/home/siswa/web.conf": "-rw-rw-r--",
-            "/home/siswa/notes.txt": "-rw-r--r--",
-            "/home/siswa/backup": "drwxr-xr-x"
-        };
-        
-        let fileOwners = {
-            "/etc": "root root",
-            "/home": "root root",
-            "/var": "root root",
-            "/bin": "root root",
-            "/etc/hostname": "root root",
-            "/etc/passwd": "root root",
-            "/etc/dhcp": "root root",
-            "/etc/dhcp/dhcpd.conf": "root root",
-            "/var/lib/dhcp/dhcpd.leases": "root root",
-            "/home/siswa": "siswa siswa",
-            "/home/siswa/web.conf": "siswa siswa",
-            "/home/siswa/notes.txt": "siswa siswa",
-            "/home/siswa/backup": "siswa siswa"
-        };
+      let factor = 0.05;
+      if (jenis === 'STP') factor = 0.04;
+      if (jenis === 'Coaxial') factor = 0.02;
+      if (jenis === 'Fiber Optic') factor = 0.002;
 
-        const termInput = document.getElementById('termInput');
-        const typingArea = document.getElementById('typingArea');
-        const termOutput = document.getElementById('termOutput');
-        const promptText = document.getElementById('promptText');
-        const terminalBox = document.getElementById('terminalBox');
+      const redaman = (jarak * factor).toFixed(2);
+      let status = "Sangat Baik";
+      let statusClass = "text-xs font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded";
 
-        function focusTerminal() { termInput.focus(); }
-        function updateTyping() { typingArea.textContent = termInput.value; }
+      if (redaman > 5 && redaman <= 12) {
+        status = "Cukup Baik";
+        statusClass = "text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded";
+      } else if (redaman > 12) {
+        status = "Sinyal Kritis / Terputus";
+        statusClass = "text-xs font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded";
+      }
 
-        function getPromptPath() {
-            if (termCwd === "/home/siswa") return "~";
-            if (termCwd.startsWith("/home/siswa/")) return "~" + termCwd.substring(11);
-            return termCwd;
-        }
+      const badgeStatus = document.getElementById('badge-status-sinyal');
+      badgeStatus.innerText = status;
+      badgeStatus.className = statusClass;
 
-        function updatePrompt() {
-            promptText.textContent = `siswa@server:${getPromptPath()}$`;
-        }
+      lastSimData = { kabel: jenis, jarak: jarak, redaman: redaman, status: status };
+      document.getElementById('sim4b-out').innerText = `Jarak: ${jarak}m | Redaman: ${redaman} dB | Status: ${status}`;
 
-        function printLine(htmlText) {
-            const div = document.createElement('div');
-            div.innerHTML = htmlText;
-            termOutput.appendChild(div);
-        }
+      renderAttenuationCanvas();
+    }
 
-        function escapeHtml(unsafe) {
-            return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
-        }
+    function catatSimulasi() {
+      if (!lastSimData.kabel) runSim4B();
 
-        function resolvePath(p) {
-            if (!p) return termCwd;
-            if (p === "/") return "/";
-            if (p === "~") return "/home/siswa";
-            
-            let parts = p.split('/');
-            let currentPath = p.startsWith('/') ? [] : termCwd === '/' ? [] : termCwd.split('/').filter(Boolean);
+      tableData.push({ ...lastSimData });
+      renderTabelPengamatan();
+    }
 
-            for (let part of parts) {
-                if (part === "" || part === ".") continue;
-                if (part === "..") {
-                    if (currentPath.length > 0) currentPath.pop();
-                } else {
-                    currentPath.push(part);
-                }
-            }
-            let resolved = "/" + currentPath.join('/');
-            return resolved === "" ? "/" : resolved;
-        }
+    function deleteDataRow(index) {
+      tableData.splice(index, 1);
+      renderTabelPengamatan();
+    }
 
-        function getNode(path) {
-            if (path === "/") return vfs["/"];
-            return vfs[path];
-        }
+    function renderTabelPengamatan() {
+      const tbody = document.getElementById('tbl-body');
+      tbody.innerHTML = '';
 
-        function getFilePerm(path) {
-            return filePermissions[path] || (vfs[path]?.type === 'dir' ? "drwxr-xr-x" : "-rw-r--r--");
-        }
-        function getFileOwner(path) {
-            return fileOwners[path] || (path.startsWith("/home/siswa") ? "siswa siswa" : "root root");
-        }
+      if (tableData.length === 0) {
+        tbody.innerHTML = `<tr id="empty-row"><td colspan="6" class="px-4 py-8 text-center text-slate-400 italic">Belum ada data pengamatan. Klik tombol "+ Catat Data Simulasi" untuk menyimpan hasil.</td></tr>`;
+        return;
+      }
 
-        function executeCmd(cmdStr) {
-            let args = cmdStr.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-            if (args.length === 0) return;
-            
-            let isSudo = false;
-            if (args[0] === "sudo") {
-                isSudo = true;
-                args.shift(); // remove sudo
-                if (args.length === 0) {
-                    printLine("usage: sudo [command]");
-                    return;
-                }
-            }
-            let cmd = args[0];
-            
-            if (cmd === "clear") {
-                termOutput.innerHTML = "";
-            } else if (cmd === "pwd") {
-                printLine(termCwd);
-            } else if (cmd === "cd") {
-                let target = args[1] || "/home/siswa";
-                let resPath = resolvePath(target);
-                let node = getNode(resPath);
-                
-                if (!node) {
-                    printLine(`bash: cd: ${target}: No such file or directory`);
-                } else if (node.type !== 'dir') {
-                    printLine(`bash: cd: ${target}: Not a directory`);
-                } else {
-                    termCwd = resPath;
-                    updatePrompt();
-                }
-            } else if (cmd === "ls") {
-                let isLong = args.includes("-l");
-                let targetArg = args.find(a => !a.startsWith("-") && a !== "ls") || ".";
-                let targetPath = resolvePath(targetArg);
-                let node = getNode(targetPath);
-                
-                if (!node) {
-                    printLine(`ls: cannot access '${targetArg}': No such file or directory`);
-                    return;
-                }
-                
-                if (node.type === 'file') {
-                    if (isLong) {
-                        let perm = getFilePerm(targetPath);
-                        let owner = getFileOwner(targetPath);
-                        let size = node.content.length;
-                        printLine(`${perm} 1 ${owner} ${size} Aug 19 12:00 ${targetArg}`);
-                    } else {
-                        printLine(targetArg);
-                    }
-                } else {
-                    if (node.files.length === 0) return;
-                    
-                    if (isLong) {
-                        printLine("total " + (node.files.length * 4));
-                        node.files.forEach(f => {
-                            let childPath = targetPath === "/" ? "/" + f : targetPath + "/" + f;
-                            let childPerm = getFilePerm(childPath);
-                            let childOwner = getFileOwner(childPath);
-                            let childNode = getNode(childPath);
-                            let size = childNode?.type === 'file' ? childNode.content.length : 4096;
-                            
-                            let colorClass = childNode?.type === 'dir' ? 'text-blue-400 font-bold' : 'text-slate-300';
-                            printLine(`${childPerm} 1 ${childOwner} ${size} Aug 19 12:00 <span class="${colorClass}">${f}</span>`);
-                        });
-                    } else {
-                        let output = [];
-                        node.files.forEach(f => {
-                            let childPath = targetPath === "/" ? "/" + f : targetPath + "/" + f;
-                            let childNode = getNode(childPath);
-                            let colorClass = childNode?.type === 'dir' ? 'text-blue-400 font-bold' : 'text-slate-300';
-                            output.push(`<span class="${colorClass}">${f}</span>`);
-                        });
-                        printLine(output.join('  '));
-                    }
-                }
-            } else if (cmd === "cat") {
-                let targetArg = args[1];
-                if (!targetArg) { printLine("cat: missing operand"); return; }
-                let targetPath = resolvePath(targetArg);
-                let node = getNode(targetPath);
-                
-                if (!node) printLine(`cat: ${targetArg}: No such file or directory`);
-                else if (node.type === 'dir') printLine(`cat: ${targetArg}: Is a directory`);
-                else {
-                    // Check permission basic mock
-                    if (targetPath.startsWith("/etc") && !isSudo && !["/etc/hostname", "/etc/os-release", "/etc/dhcp/dhcpd.conf", "/etc/network/interfaces"].includes(targetPath)) {
-                         printLine(`cat: ${targetArg}: Permission denied`);
-                    } else {
-                        printLine(escapeHtml(node.content).replace(/\n/g, '<br>'));
-                    }
-                }
-            } else if (cmd === "grep") {
-                let pattern = args[1];
-                let targetArg = args[2];
-                if (!pattern || !targetArg) { printLine("Usage: grep [PATTERN] [FILE]"); return; }
-                
-                // remove quotes from pattern if any
-                pattern = pattern.replace(/^["'](.*)["']$/, '$1');
-                
-                let targetPath = resolvePath(targetArg);
-                let node = getNode(targetPath);
-                
-                if (!node) printLine(`grep: ${targetArg}: No such file or directory`);
-                else if (node.type === 'dir') printLine(`grep: ${targetArg}: Is a directory`);
-                else {
-                    let lines = node.content.split('\n');
-                    let matchFound = false;
-                    lines.forEach(line => {
-                        if (line.includes(pattern)) {
-                            matchFound = true;
-                            // highlight
-                            let highlighted = escapeHtml(line).replace(new RegExp(pattern, 'g'), `<span class="grep-match">${escapeHtml(pattern)}</span>`);
-                            printLine(highlighted);
-                        }
-                    });
-                }
-            } else if (cmd === "systemctl") {
-                let action = args[1];
-                let service = args[2];
-                if(service === "isc-dhcp-server") {
-                    if(action === "status") {
-                        printLine(`<span class="text-emerald-400">●</span> isc-dhcp-server.service - LSB: DHCP server<br>   Loaded: loaded (/etc/init.d/isc-dhcp-server; generated)<br>   Active: <span class="text-emerald-400 font-bold">active (running)</span> since Wed 2026-08-19 12:00:00 WIB<br>     Docs: man:systemd-sysv-generator(8)`);
-                    } else if (action === "restart") {
-                        if(!isSudo) printLine("==== AUTHENTICATING FOR org.freedesktop.systemd1.manage-units ====<br>Authentication is required to restart 'isc-dhcp-server.service'.<br>Authenticating as: root<br>Password: [HIDDEN]<br>==== AUTHENTICATION COMPLETE ====");
-                        else printLine("Restarting isc-dhcp-server...");
-                    } else if (action === "enable") {
-                        printLine("Synchronizing state of isc-dhcp-server.service with SysV service script with /lib/systemd/systemd-sysv-install.<br>Executing: /lib/systemd/systemd-sysv-install enable isc-dhcp-server");
-                    } else {
-                        printLine(`Unknown systemctl action: ${action}`);
-                    }
-                } else {
-                    printLine(`Unit ${service}.service could not be found.`);
-                }
-            } else if (cmd === "nano" || cmd === "vim") {
-                 let targetArg = args[1];
-                 if(!targetArg) { printLine("Error: No file specified."); return; }
-                 printLine(`<span class="text-amber-400">[Simulasi] Membuka ${targetArg} di text editor... (Tekan Ctrl+X untuk keluar)</span><br>Dalam lab ini, anggap Anda telah mengedit file tersebut. Gunakan perintah \`cat\` untuk melihat isinya.`);
-            } else if (cmd === "ip" && args[1] === "a") {
-                printLine(`1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<br>    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<br>    inet 127.0.0.1/8 scope host lo<br>       valid_lft forever preferred_lft forever<br>2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000<br>    link/ether 08:00:27:8c:12:44 brd ff:ff:ff:ff:ff:ff<br>    inet 192.168.1.254/24 brd 192.168.1.255 scope global eth0<br>       valid_lft forever preferred_lft forever`);
-            } else if (cmd === "dhclient") {
-                if(args[1] === "-r") printLine("Killed old client process<br>Internet Systems Consortium DHCP Client 4.4.3<br>Copyright 2004-2022 Internet Systems Consortium.<br>All rights reserved.<br>Listening on LPF/eth0/08:00:27:8c:12:44<br>Sending on   LPF/eth0/08:00:27:8c:12:44<br>DHCPRELEASE of 192.168.10.50 on eth0 to 192.168.10.1 port 67");
-                else printLine("Internet Systems Consortium DHCP Client 4.4.3<br>Copyright 2004-2022 Internet Systems Consortium.<br>All rights reserved.<br>Listening on LPF/eth0/08:00:27:8c:12:44<br>Sending on   LPF/eth0/08:00:27:8c:12:44<br>DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3<br>DHCPOFFER of 192.168.10.50 from 192.168.10.1<br>DHCPREQUEST for 192.168.10.50 on eth0 to 255.255.255.255 port 67<br>DHCPACK of 192.168.10.50 from 192.168.10.1<br>bound to 192.168.10.50 -- renewal in 3230 seconds.");
-            } else if (cmd === "ping") {
-                let target = args[1] || "";
-                if(!target) { printLine("ping: usage error: Destination address required"); return; }
-                printLine(`PING ${target} (56 data bytes)<br>64 bytes from ${target}: icmp_seq=1 ttl=64 time=0.8 ms<br>64 bytes from ${target}: icmp_seq=2 ttl=64 time=0.7 ms<br>64 bytes from ${target}: icmp_seq=3 ttl=64 time=0.9 ms<br>--- ${target} ping statistics ---<br>3 packets transmitted, 3 received, 0% packet loss`);
-            } else if (cmd === "tail") {
-                let targetArg = args[args.length - 1]; // get last arg, ignoring flags like -f
-                let targetPath = resolvePath(targetArg);
-                if(targetPath === "/var/log/syslog" || targetPath === "/etc/dhcp/dhcpd.conf") {
-                    let node = getNode(targetPath);
-                    let lines = node.content.split('\n');
-                    printLine(escapeHtml(lines.slice(-10).join('\n')).replace(/\n/g, '<br>'));
-                    if(args.includes("-f")) {
-                        printLine("<span class='text-slate-500'>[Mode Tailing Aktif - Tekan Ctrl+C untuk keluar]</span>");
-                    }
-                } else {
-                    printLine(`tail: cannot open '${targetArg}' for reading: No such file or directory`);
-                }
-            } else if (cmd === "echo") {
-                let output = args.slice(1).join(" ");
-                // basic handle for removing quotes if they surround the whole string
-                if (output.startsWith('"') && output.endsWith('"')) {
-                    output = output.slice(1, -1);
-                } else if (output.startsWith("'") && output.endsWith("'")) {
-                     output = output.slice(1, -1);
-                }
-                printLine(escapeHtml(output));
-            } else {
-                printLine(`bash: ${cmd}: command not found`);
-            }
-        }
+      tableData.forEach((row, idx) => {
+        let badgeColor = "bg-emerald-100 text-emerald-800";
+        if (row.status.includes("Cukup")) badgeColor = "bg-amber-100 text-amber-800";
+        if (row.status.includes("Kritis")) badgeColor = "bg-rose-100 text-rose-800";
 
-        function handleTermKey(e) {
-            if (e.key === 'Enter') {
-                let cmd = termInput.value.trim();
-                printLine(`<span class="text-emerald-400 font-semibold mr-2">${promptText.textContent}</span>${escapeHtml(cmd)}`);
-                
-                if (cmd !== "") {
-                    cmdHistory.push(cmd);
-                    historyIndex = cmdHistory.length;
-                    executeCmd(cmd);
-                }
-                
-                termInput.value = '';
-                updateTyping();
-                terminalBox.scrollTop = terminalBox.scrollHeight;
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    termInput.value = cmdHistory[historyIndex];
-                    updateTyping();
-                }
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (historyIndex < cmdHistory.length - 1) {
-                    historyIndex++;
-                    termInput.value = cmdHistory[historyIndex];
-                    updateTyping();
-                } else {
-                    historyIndex = cmdHistory.length;
-                    termInput.value = '';
-                    updateTyping();
-                }
-            }
-        }
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b border-slate-100 transition";
+        tr.innerHTML = `
+          <td class="px-4 py-3 text-center font-bold text-slate-500">${idx + 1}</td>
+          <td class="px-4 py-3 font-semibold text-slate-800">${row.kabel}</td>
+          <td class="px-4 py-3 font-mono text-slate-600">${row.jarak} m</td>
+          <td class="px-4 py-3 font-mono font-bold text-indigo-600">${row.redaman} dB</td>
+          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold ${badgeColor}">${row.status}</span></td>
+          <td class="px-4 py-3 text-center no-print">
+            <button onclick="deleteDataRow(${idx})" class="text-rose-500 hover:text-rose-700 font-medium text-xs p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-        function sendCtrlC() {
-            printLine(`<span class="text-emerald-400 font-semibold mr-2">${promptText.textContent}</span>${escapeHtml(termInput.value)}^C`);
-            termInput.value = '';
-            updateTyping();
-            terminalBox.scrollTop = terminalBox.scrollHeight;
-            focusTerminal();
-        }
+    function exportCSV() {
+      if (tableData.length === 0) {
+        alert("Belum ada data pengamatan untuk di-export!");
+        return;
+      }
+      let csvContent = "data:text/csv;charset=utf-8,No,Jenis Kabel,Jarak (m),Redaman (dB),Status\n";
+      tableData.forEach((d, i) => {
+        csvContent += `${i + 1},${d.kabel},${d.jarak},${d.redaman},"${d.status}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "Pengamatan_Karakteristik_Kabel_LKPD4.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
-        function sendVirtualKey(keyName) {
-            if(keyName === 'Enter') {
-                const e = new KeyboardEvent('keydown', {key: 'Enter'});
-                handleTermKey(e);
-            } else if (keyName === 'ArrowUp' || keyName === 'ArrowDown') {
-                 const e = new KeyboardEvent('keydown', {key: keyName});
-                 handleTermKey(e);
-            } else if (keyName === 'Escape' || keyName === 'Tab') {
-                // Ignore for now in simple mock, just regain focus
-                focusTerminal();
-            }
-        }
+    function renderQuiz() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
 
-        function insertChar(char) {
-            termInput.value += char;
-            updateTyping();
-            focusTerminal();
-        }
+      questionBank.forEach((q, idx) => {
+        const qCard = document.createElement('div');
+        qCard.className = "p-4 sm:p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition";
+        qCard.id = `q-block-${q.id}`;
 
-        // Initialize terminal prompt on load
-        window.addEventListener('DOMContentLoaded', () => {
-             updatePrompt();
+        let optionsHtml = '';
+        q.options.forEach(opt => {
+          const optVal = opt.charAt(0);
+          optionsHtml += `
+            <label class="flex items-start gap-3 p-2.5 rounded-lg border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer transition text-xs font-medium text-slate-700">
+              <input type="radio" name="q${q.id}" value="${optVal}" class="mt-0.5 accent-indigo-600 focus:ring-indigo-500">
+              <span>${opt}</span>
+            </label>
+          `;
         });
 
-    </script>
+        qCard.innerHTML = `
+          <p class="font-semibold text-xs sm:text-sm text-slate-800 mb-3 flex items-start gap-2">
+            <span class="bg-indigo-600 text-white text-[11px] font-bold px-2 py-0.5 rounded">${idx + 1}</span>
+            <span>${q.q}</span>
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            ${optionsHtml}
+          </div>
+          <div id="feedback-q${q.id}" class="mt-2 text-xs hidden p-2 rounded"></div>
+        `;
+        container.appendChild(qCard);
+      });
+    }
+
+    async function selesaikanLKPD() {
+      const sekolah = document.getElementById('sel-sekolah').value;
+      const kelas = document.getElementById('sel-kelas').value;
+      const nama = document.getElementById('sel-nama').value;
+
+      if (!sekolah || !kelas || !nama) {
+        alert("Harap lengkapi Identitas Peserta Didik terlebih dahulu!");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      let skorBenar = 0;
+      let unanswered = 0;
+
+      questionBank.forEach(q => {
+        const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+        const feedbackEl = document.getElementById(`feedback-q${q.id}`);
+        feedbackEl.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'bg-rose-50', 'text-rose-800');
+
+        if (selected) {
+          if (selected.value === q.ans) {
+            skorBenar++;
+            feedbackEl.classList.add('bg-emerald-50', 'text-emerald-800');
+            feedbackEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> <b>Benar!</b> Jawaban Anda tepat.`;
+          } else {
+            feedbackEl.classList.add('bg-rose-50', 'text-rose-800');
+            feedbackEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-1"></i> <b>Salah.</b> Jawaban benar: <b>${q.ans}</b>`;
+          }
+        } else {
+          unanswered++;
+          feedbackEl.classList.add('bg-rose-50', 'text-rose-800');
+          feedbackEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600 mr-1"></i> Belum dijawab. Jawaban benar: <b>${q.ans}</b>`;
+        }
+      });
+
+      const nilaiAkhir = Math.round((skorBenar / questionBank.length) * 100);
+      const durasiDetik = waktuMulai > 0 ? Math.floor((Date.now() - waktuMulai) / 1000) : 0;
+      const pilihanLkpdTerpilih = "LKPD 4: Karakteristik Media Transmisi Kabel";
+
+      const payload = {
+        sekolah: sekolah,
+        nama_lengkap: nama,
+        pilihan_lkpd: pilihanLkpdTerpilih,
+        kelas: kelas,
+        durasi_detik: durasiDetik,
+        skor_pg_benar: skorBenar,
+        nilai_akhir: nilaiAkhir,
+        tabelPengamatan: tableData
+      };
+
+      // UI result update
+      document.getElementById('modal-student-name').innerText = `${nama} | ${kelas} - ${sekolah}`;
+      document.getElementById('modal-score').innerText = nilaiAkhir;
+      
+      let desc = "Sangat Baik! Anda menguasai karakteristik media kabel jaringan dengan sempurna.";
+      if (nilaiAkhir < 75) desc = "Cukup Baik. Pelajari kembali poin redaman sinyal dan perbandingan UTP/STP/Fiber Optic.";
+      if (nilaiAkhir < 60) desc = "Perlu Peningkatan. Baca kembali ringkasan materi dan ulangi simulasi praktikum.";
+      document.getElementById('modal-score-desc').innerText = desc;
+
+      const statusKirimEl = document.getElementById('status-kirim-gas');
+      statusKirimEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-500"></i> Mengirim data ke server guru...`;
+      document.getElementById('modal-result').classList.remove('hidden');
+      document.getElementById('btn-download-pdf').classList.remove('hidden');
+
+      // Kirim data ke Google Apps Script via HTTP POST
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        statusKirimEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Data berhasil terkirim ke spreadsheet guru!`;
+      } catch (err) {
+        console.error("Gagal mengirim data via fetch:", err);
+        statusKirimEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Gagal otomatis via Fetch. (Offline / CORS)`;
+      }
+
+      // Fallback compatibility jika dijalankan di environment Google Apps Script langsung
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          console.log("Data terkirim via google.script.run:", res);
+        }).processForm(payload);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal-result').classList.add('hidden');
+    }
+
+    function cetakLaporan() {
+      closeModal();
+      window.print();
+    }
+
+    function resetForm() {
+      if (confirm("Apakah Anda yakin ingin meriset seluruh isian dan data praktikum LKPD ini?")) {
+        document.getElementById('sel-sekolah').value = "";
+        updateDropdownKelas();
+        tableData = [];
+        waktuMulai = 0;
+        renderTabelPengamatan();
+        document.getElementById('form-quiz').reset();
+        questionBank.forEach(q => {
+          const feedbackEl = document.getElementById(`feedback-q${q.id}`);
+          if (feedbackEl) feedbackEl.classList.add('hidden');
+        });
+        document.getElementById('btn-download-pdf').classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    window.onload = function () {
+      initDatabaseSiswa();
+      renderQuiz();
+      renderEmiCanvas();
+      runSim4B();
+
+      window.addEventListener('resize', () => {
+        renderEmiCanvas();
+        renderAttenuationCanvas();
+      });
+    };
+  </script>
 </body>
 </html>
