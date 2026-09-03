@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro FTP Server Simulator (Mobile & Compact Nano)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Ubuntu Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0f172a;
+            touch-action: manipulation;
+        }
+        .font-linux { 
+            font-family: 'Ubuntu Mono', monospace; 
+        }
+        
+        /* Custom Scrollbar */
+        .terminal-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: #000; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Hide Scrollbar for Quick Buttons */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Nano Editor Overlay */
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 100%;
+            background-color: #000;
+            z-index: 30;
+            flex-direction: column;
+            border-right: 2px solid #334155;
+            box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (min-width: 640px) {
+            #nanoEditor {
+                width: 60%;
+                max-width: 620px;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-300 antialiased h-screen flex flex-col overflow-hidden selection:bg-slate-700 selection:text-white">
+
+    <!-- Header Responsif -->
+    <header class="bg-slate-900 border-b border-slate-800 text-slate-400 py-2 px-3 flex justify-between items-center shadow-lg z-10 shrink-0">
+        <div class="flex items-center gap-2">
+            <i class="fa-brands fa-linux text-xl text-slate-200"></i>
+            <div>
+                <h1 class="text-xs sm:text-sm font-bold text-slate-200 tracking-wide">Linux SysAdmin Lab</h1>
+                <p class="text-[9px] sm:text-[10px] font-mono text-emerald-400">FTP Server (vsftpd)</p>
+            </div>
+        </div>
+        <div class="flex gap-1.5">
+            <button onclick="showGuide()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded border border-slate-700 flex items-center gap-1">
+                <i class="fa-solid fa-book text-emerald-400"></i> <span>Panduan</span>
+            </button>
+            <button onclick="resetLab()" class="text-xs bg-red-900/40 hover:bg-red-800/80 text-red-200 px-2.5 py-1.5 rounded border border-red-900/50 flex items-center gap-1">
+                <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Reset</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-grow flex relative bg-black overflow-hidden">
+        
+        <!-- Terminal Window -->
+        <div class="w-full h-full p-1.5 sm:p-2 flex flex-col">
+            <div class="w-full h-full bg-[#0c0c0c] rounded-md shadow-2xl relative border border-slate-800 overflow-hidden flex flex-col">
+                
+                <!-- Terminal Output -->
+                <div id="terminalOutput" class="flex-grow p-3 overflow-y-auto terminal-scroll font-linux text-sm sm:text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap">
+<div class="text-slate-500 text-xs">Linux ftp-server 6.1.0-11-amd64 Debian 12</div>
+<div class="text-emerald-400/90 mt-1 text-xs sm:text-sm">Gunakan panduan (buku hijau) dan selesaikan konfigurasi FTP. Ketik <span class="text-yellow-300 font-bold">submit-lab</span> untuk verifikasi akhir.</div><br></div>
+
+                <!-- Touch Quick Commands Bar -->
+                <div class="bg-slate-900/90 border-t border-slate-800 p-1.5 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                    <span class="text-[10px] text-slate-500 self-center font-mono px-1 shrink-0"><i class="fa-solid fa-bolt"></i> Cepat:</span>
+                    <button onclick="quickCmd('sudo apt update')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">apt update</button>
+                    <button onclick="quickCmd('sudo apt install vsftpd -y')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">install vsftpd</button>
+                    <button onclick="quickCmd('sudo nano /etc/vsftpd.conf')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">nano vsftpd.conf</button>
+                    <button onclick="quickCmd('sudo adduser siswa_ftp')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">adduser</button>
+                    <button onclick="quickCmd('sudo systemctl restart vsftpd')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">restart ftp</button>
+                    <button onclick="quickCmd('submit-lab')" class="text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-2.5 py-1 rounded border border-emerald-700/80 font-bold whitespace-nowrap shrink-0">submit-lab</button>
+                </div>
+
+                <!-- Input Line -->
+                <form onsubmit="handleFormSubmit(event)" class="p-2 bg-black border-t border-slate-800 flex items-center gap-2 shrink-0">
+                    <span class="text-green-500 font-bold font-linux text-xs sm:text-sm shrink-0" id="promptText">root@ftp:~#</span>
+                    <input type="text" id="cmdInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Ketik perintah di sini..." class="flex-grow bg-transparent text-slate-200 font-linux text-sm focus:outline-none">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 flex items-center gap-1">
+                        <span>Kirim</span> <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                    </button>
+                </form>
+                
+                <!-- GNU Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm">
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 5.09</span>
+                        <span id="nanoTitle" class="text-xs truncate max-w-[160px]">File: ...</span>
+                        <div></div>
+                    </div>
+                    
+                    <div class="bg-slate-900 border-b border-slate-800 p-1.5 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-floppy-disk"></i> Simpan & Keluar
+                        </button>
+                        <button type="button" onclick="closeNano()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 px-3 rounded text-xs font-bold">
+                            Batal
+                        </button>
+                    </div>
+
+                    <textarea id="nanoTextarea" class="flex-grow bg-black text-slate-200 p-2 outline-none resize-none font-linux text-xs sm:text-sm leading-relaxed" spellcheck="false"></textarea>
+                    
+                    <div class="bg-slate-900 text-slate-400 px-2 py-1 text-[11px] border-t border-slate-800 shrink-0">
+                        <span id="nanoMessage">Tips: Hapus tanda '#' dan tambahkan konfigurasi sesuai panduan.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guide Panel Drawer -->
+        <div id="guidePanel" class="hidden absolute right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 bg-slate-900 border-l border-slate-700 shadow-2xl flex flex-col z-50">
+            <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                <h3 class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-list-check text-emerald-500 mr-2"></i>Panduan Praktikum FTP</h3>
+                <button onclick="showGuide()" class="text-slate-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow text-xs sm:text-sm space-y-4 text-slate-300">
+                <div>
+                    <h4 class="font-bold text-emerald-400">1. Instalasi vsftpd</h4>
+                    <code onclick="quickCmd('sudo apt update')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt update</code>
+                    <code onclick="quickCmd('sudo apt install vsftpd -y')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt install vsftpd -y</code>
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-400">2. Konfigurasi vsftpd.conf</h4>
+                    <code onclick="quickCmd('sudo nano /etc/vsftpd.conf')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo nano /etc/vsftpd.conf</code>
+                    <p class="text-[11px] mt-1 text-slate-400">Ubah atau tambahkan baris berikut di Nano:</p>
+                    <pre class="bg-black p-2 rounded text-[10px] text-slate-300 select-all font-mono">listen=NO
+listen_ipv6=YES
+anonymous_enable=NO
+local_enable=YES
+write_enable=YES
+chroot_local_user=YES
+
+pasv_enable=YES
+pasv_min_port=40000
+pasv_max_port=50000
+user_sub_token=$USER
+local_root=/home/$USER/ftp</pre>
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-400">3. User & Folder (misal: siswa_ftp)</h4>
+                    <code onclick="quickCmd('sudo adduser siswa_ftp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo adduser siswa_ftp</code>
+                    <code onclick="quickCmd('sudo mkdir /home/siswa_ftp/ftp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo mkdir /home/siswa_ftp/ftp</code>
+                    <code onclick="quickCmd('sudo chown root:root /home/siswa_ftp/ftp')" class="block bg-black p-2 mt-1 rounded text-[10px] cursor-pointer">sudo chown root:root /home/siswa_ftp/ftp</code>
+                    <code onclick="quickCmd('sudo chmod 755 /home/siswa_ftp/ftp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo chmod 755 /home/siswa_ftp/ftp</code>
+                    <code onclick="quickCmd('sudo mkdir /home/siswa_ftp/ftp/upload_dir')" class="block bg-black p-2 mt-1 rounded text-[10px] cursor-pointer">sudo mkdir /home/siswa_ftp/ftp/upload_dir</code>
+                    <code onclick="quickCmd('sudo chown siswa_ftp:siswa_ftp /home/siswa_ftp/ftp/upload_dir')" class="block bg-black p-2 mt-1 rounded text-[10px] cursor-pointer">sudo chown siswa_ftp:siswa_ftp /home/siswa_ftp/ftp/upload_dir</code>
+                </div>
+                <div>
+                    <h4 class="font-bold text-emerald-400">4. Firewall (UFW) & Restart</h4>
+                    <code onclick="quickCmd('sudo ufw allow 20/tcp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw allow 20/tcp</code>
+                    <code onclick="quickCmd('sudo ufw allow 21/tcp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw allow 21/tcp</code>
+                    <code onclick="quickCmd('sudo ufw allow 40000:50000/tcp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw allow 40000:50000/tcp</code>
+                    <code onclick="quickCmd('sudo ufw reload')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw reload</code>
+                    <code onclick="quickCmd('sudo systemctl restart vsftpd')" class="block bg-black p-2 mt-2 rounded text-xs cursor-pointer">sudo systemctl restart vsftpd</code>
+                </div>
+                <div class="border-t border-slate-700 pt-3">
+                    <h4 class="font-bold text-yellow-400">5. Verifikasi Akhir</h4>
+                    <code onclick="quickCmd('submit-lab')" class="block bg-black p-2 mt-1 rounded text-xs text-yellow-300 font-bold cursor-pointer">submit-lab</code>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const terminalOutput = document.getElementById('terminalOutput');
+        const cmdInput = document.getElementById('cmdInput');
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        
+        let currentDir = "~";
+        let isNanoOpen = false;
+        let currentFile = "";
+        let ftpUser = "";
+        
+        // Virtual File System
+        const fileSystem = {
+            "/etc/vsftpd.conf": "# Default config vsftpd\nlisten=NO\nlisten_ipv6=YES\nanonymous_enable=YES\nlocal_enable=YES\n#write_enable=YES\n#chroot_local_user=YES\n"
+        };
+
+        // State sistem
+        let vsftpdInstalled = false;
+        let userAdded = false;
+        let folderFtpCreated = false;
+        let folderUploadCreated = false;
+        let chownRootDone = false;
+        let chownUserDone = false;
+        let ufwPortsOpen = 0;
+        let vsftpdRestarted = false;
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const command = cmdInput.value.trim();
+            if(!command) return;
+
+            printToTerminal(`<span class="text-green-500 font-bold">root@ftp:${currentDir}#</span> ${command}`);
+            cmdInput.value = '';
+            processCommand(command);
+        }
+
+        function quickCmd(text) {
+            cmdInput.value = text;
+            printToTerminal(`<span class="text-green-500 font-bold">root@ftp:${currentDir}#</span> ${text}`);
+            cmdInput.value = '';
+            processCommand(text);
+        }
+
+        function printToTerminal(html) {
+            terminalOutput.innerHTML += `<div>${html}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function processCommand(rawCmd) {
+            if (!rawCmd) return;
+            // Bersihkan 'sudo' agar pembacaan argumen lebih mudah
+            const cmd = rawCmd.replace(/^sudo\s+/, '').trim();
+            const args = cmd.split(/\s+/);
+            const baseCmd = args[0];
+
+            if(cmd === 'apt update') {
+                simulateLoading([
+                    "Hit:1 http://deb.debian.org/debian bookworm InRelease",
+                    "Reading package lists... Done",
+                    "All packages are up to date."
+                ]);
+            } 
+            else if(cmd === 'apt install vsftpd -y' || cmd === 'apt-get install vsftpd -y') {
+                simulateLoading([
+                    "Reading package lists... Done",
+                    "Unpacking vsftpd (3.0.3-13+b1) ...",
+                    "Setting up vsftpd (3.0.3-13+b1) ..."
+                ], () => { vsftpdInstalled = true; });
+            }
+            else if(baseCmd === 'nano') {
+                const file = args[1];
+                if(file) openNano(file);
+                else printToTerminal("nano: please specify a file to edit");
+            }
+            else if(baseCmd === 'adduser') {
+                ftpUser = args[1];
+                if(ftpUser) {
+                    userAdded = true;
+                    simulateLoading([
+                        `Adding user '${ftpUser}' ...`,
+                        `Adding new group '${ftpUser}' ...`,
+                        `Creating home directory '/home/${ftpUser}' ...`,
+                        "New password: ****",
+                        "Retype new password: ****",
+                        "passwd: password updated successfully"
+                    ]);
+                } else {
+                    printToTerminal("adduser: please specify a username");
+                }
+            }
+            else if(baseCmd === 'mkdir') {
+                const path = args[1];
+                if(path && path.includes('/ftp/upload_dir')) {
+                    folderUploadCreated = true;
+                    printToTerminal(""); // Sukses tanpa output
+                } else if(path && path.includes('/ftp')) {
+                    folderFtpCreated = true;
+                    printToTerminal(""); // Sukses tanpa output
+                }
+            }
+            else if(baseCmd === 'chown') {
+                const target = args[2];
+                if(args[1] === 'root:root' && target && target.includes('/ftp')) {
+                    chownRootDone = true;
+                } else if(args[1] !== 'root:root' && target && target.includes('upload_dir')) {
+                    chownUserDone = true;
+                }
+                printToTerminal("");
+            }
+            else if(baseCmd === 'chmod') {
+                printToTerminal(""); // Simulasi chmod berhasil
+            }
+            else if(baseCmd === 'ufw') {
+                if(cmd.includes('allow 20/tcp') || cmd.includes('allow 21/tcp') || cmd.includes('allow 40000:50000/tcp')) {
+                    ufwPortsOpen++;
+                    printToTerminal("Rule added\nRule added (v6)");
+                } else if(cmd.includes('reload')) {
+                    printToTerminal("Firewall reloaded");
+                }
+            }
+            else if(cmd === 'systemctl restart vsftpd' || cmd === 'service vsftpd restart') {
+                if(!vsftpdInstalled) printToTerminal("Failed to restart vsftpd.service: Unit vsftpd.service not found.");
+                else {
+                    vsftpdRestarted = true;
+                    printToTerminal("<span class='text-emerald-400'>[ OK ] Restarted Very Secure FTP Daemon.</span>");
+                }
+            }
+            else if(cmd === 'submit-lab') {
+                verifySubmission();
+            }
+            else if(cmd === 'clear') {
+                terminalOutput.innerHTML = '';
+            }
+            else {
+                printToTerminal(`bash: ${baseCmd}: command not found`);
+            }
+        }
+
+        // --- VERIFIKASI PRAKTIKUM (SUBMIT-LAB) ---
+        function verifySubmission() {
+            printToTerminal("<div class='text-yellow-400 my-1'>[SYSTEM] Memeriksa kelengkapan konfigurasi FTP...</div>");
+
+            const vsftpdConf = fileSystem["/etc/vsftpd.conf"] || "";
+
+            let checks = [];
+            let isAllOk = true;
+
+            // 1. Cek Paket
+            if (vsftpdInstalled) checks.push("<span class='text-green-400'>✔ [PASSED] Paket vsftpd terinstal.</span>");
+            else { checks.push("<span class='text-red-400'>✘ [FAILED] Paket vsftpd belum diinstal.</span>"); isAllOk = false; }
+
+            // 2. Cek Konfigurasi
+            const hasAnonNo = vsftpdConf.includes("anonymous_enable=NO");
+            const hasWrite = vsftpdConf.includes("\nwrite_enable=YES") || vsftpdConf.startsWith("write_enable=YES");
+            const hasChroot = vsftpdConf.includes("\nchroot_local_user=YES") || vsftpdConf.startsWith("chroot_local_user=YES");
+            const hasPasv = vsftpdConf.includes("pasv_enable=YES");
+
+            if (hasAnonNo && hasWrite && hasChroot && hasPasv) {
+                checks.push("<span class='text-green-400'>✔ [PASSED] File vsftpd.conf diatur dengan benar (Write, Chroot, Passive).</span>");
+            } else {
+                checks.push("<span class='text-red-400'>✘ [FAILED] Konfigurasi di vsftpd.conf belum lengkap atau tanda # belum dihapus.</span>");
+                isAllOk = false;
+            }
+
+            // 3. Cek User dan Direktori
+            if (userAdded && folderFtpCreated && folderUploadCreated && chownRootDone && chownUserDone) {
+                checks.push("<span class='text-green-400'>✔ [PASSED] Struktur folder chroot dan hak akses dikonfigurasi.</span>");
+            } else {
+                checks.push("<span class='text-red-400'>✘ [FAILED] User, folder /ftp, atau hak akses (chown) belum tepat.</span>");
+                isAllOk = false;
+            }
+            
+            // 4. Cek UFW
+            if (ufwPortsOpen >= 3) {
+                checks.push("<span class='text-green-400'>✔ [PASSED] Port Firewall (20, 21, Passive) diizinkan.</span>");
+            } else {
+                checks.push("<span class='text-red-400'>✘ [FAILED] Aturan UFW belum lengkap ditambahkan.</span>");
+                isAllOk = false;
+            }
+
+            // 5. Cek Restart
+            if (vsftpdRestarted) checks.push("<span class='text-green-400'>✔ [PASSED] Service vsftpd telah di-restart.</span>");
+            else { checks.push("<span class='text-red-400'>✘ [FAILED] vsftpd belum di-restart.</span>"); isAllOk = false; }
+
+            checks.forEach(c => printToTerminal(c));
+
+            if (isAllOk) {
+                const randomHex = Math.floor(Math.random() * 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
+                const token = `SUCCESS-${randomHex}-VSFTPD`;
+                
+                printToTerminal(`
+<div class='mt-2 mb-2 p-3 border border-emerald-500 bg-emerald-950/60 rounded text-emerald-200'>
+    <div class='font-bold text-emerald-400 text-base'><i class='fa-solid fa-circle-check mr-1'></i>VERIFIKASI TUNTAS!</div>
+    <div class='mt-2 pt-2 border-t border-emerald-800'>
+        <span class='text-[10px] text-slate-300 block uppercase'>TOKEN KELULUSAN FTP:</span>
+        <span class='text-xl font-mono font-bold text-yellow-300 tracking-wider block my-1 select-all'>${token}</span>
+        <span class='text-[10px] text-slate-400 italic'>* Salin dan kirimkan token ini ke Instruktur.</span>
+    </div>
+</div>`);
+            } else {
+                printToTerminal(`
+<div class='mt-2 mb-2 p-2 border border-red-500/50 bg-red-950/30 rounded text-red-300 text-xs'>
+    <span class='font-bold text-red-400 block'><i class='fa-solid fa-triangle-exclamation mr-1'></i>VERIFIKASI BELUM LENGKAP</span>
+    Perbaiki poin <span class='text-red-400 font-bold'>[FAILED]</span> di atas, lalu jalankan <span class='text-yellow-300 font-bold'>submit-lab</span> kembali.
+</div>`);
+            }
+        }
+
+        function simulateLoading(lines, callback = null) {
+            let i = 0;
+            function nextLine() {
+                if(i < lines.length) {
+                    printToTerminal(lines[i]);
+                    i++;
+                    setTimeout(nextLine, 100);
+                } else if(callback) callback();
+            }
+            nextLine();
+        }
+
+        // --- NANO EDITOR ---
+        function openNano(file) {
+            isNanoOpen = true;
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            
+            if(fileSystem[file] === undefined) {
+                fileSystem[file] = "";
+            }
+            
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            printToTerminal(`<span class="text-slate-400">[ Saved file ${currentFile} ]</span>`);
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false;
+            nanoEditor.style.display = 'none';
+        }
+
+        function showGuide() {
+            document.getElementById('guidePanel').classList.toggle('hidden');
+        }
+        
+        function resetLab() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
