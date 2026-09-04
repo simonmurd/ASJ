@@ -2,225 +2,578 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro File Server Simulator (Samba) - Mobile & Compact Nano</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro Samba File Server Simulator</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts: Ubuntu Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #0f172a;
             touch-action: manipulation;
         }
-        .font-linux { 
-            font-family: 'Ubuntu Mono', monospace; 
-        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
         
-        /* Custom Scrollbar */
-        .terminal-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #000; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-        /* Hide Scrollbar for Quick Buttons */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Nano Editor Overlay */
+        #resizer { cursor: col-resize; }
+        
         #nanoEditor {
             display: none;
             position: absolute;
-            top: 0; left: 0; bottom: 0;
-            width: 100%;
-            background-color: #000;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
             z-index: 30;
             flex-direction: column;
-            border-right: 2px solid #334155;
-            box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
-        }
-
-        @media (min-width: 640px) {
-            #nanoEditor {
-                width: 60%;
-                max-width: 620px;
-            }
         }
     </style>
 </head>
-<body class="text-slate-300 antialiased h-screen flex flex-col overflow-hidden selection:bg-slate-700 selection:text-white">
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
 
-    <!-- Header Responsif -->
-    <header class="bg-slate-900 border-b border-slate-800 text-slate-400 py-2 px-3 flex justify-between items-center shadow-lg z-10 shrink-0">
-        <div class="flex items-center gap-2">
-            <i class="fa-brands fa-linux text-xl text-slate-200"></i>
-            <div>
-                <h1 class="text-xs sm:text-sm font-bold text-slate-200 tracking-wide">Linux SysAdmin Lab</h1>
-                <p class="text-[9px] sm:text-[10px] font-mono text-emerald-400">File Server (Samba)</p>
-            </div>
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-server text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Samba File Server</span>
         </div>
-        <div class="flex gap-1.5">
-            <button onclick="showGuide()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded border border-slate-700 flex items-center gap-1">
-                <i class="fa-solid fa-book text-emerald-400"></i> <span>Panduan</span>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
             </button>
-            <button onclick="resetLab()" class="text-xs bg-red-900/40 hover:bg-red-800/80 text-red-200 px-2.5 py-1.5 rounded border border-red-900/50 flex items-center gap-1">
-                <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Reset</span>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
             </button>
         </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-grow flex relative bg-black overflow-hidden">
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal
+        </button>
+    </div>
+
+    <!-- Main Workspace (Split Screen di PC, Tabbed di HP) -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
         
-        <!-- Terminal Window -->
-        <div class="w-full h-full p-1.5 sm:p-2 flex flex-col">
-            <div class="w-full h-full bg-[#0c0c0c] rounded-md shadow-2xl relative border border-slate-800 overflow-hidden flex flex-col">
-                
-                <!-- Terminal Output -->
-                <div id="terminalOutput" class="flex-grow p-3 overflow-y-auto terminal-scroll font-linux text-sm sm:text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap">
-<div class="text-slate-500 text-xs">Linux file-server 6.1.0-11-amd64 Debian 12</div>
-<div class="text-emerald-400/90 mt-1 text-xs sm:text-sm">Gunakan panduan (buku hijau) dan selesaikan konfigurasi Samba. Ketik <span class="text-yellow-300 font-bold">submit-lab</span> untuk verifikasi akhir.</div><br></div>
-
-                <!-- Touch Quick Commands Bar -->
-                <div class="bg-slate-900/90 border-t border-slate-800 p-1.5 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                    <span class="text-[10px] text-slate-500 self-center font-mono px-1 shrink-0"><i class="fa-solid fa-bolt"></i> Cepat:</span>
-                    <button onclick="quickCmd('sudo apt update')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">apt update</button>
-                    <button onclick="quickCmd('sudo apt install samba -y')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">install samba</button>
-                    <button onclick="quickCmd('sudo nano /etc/samba/smb.conf')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">nano smb.conf</button>
-                    <button onclick="quickCmd('sudo adduser siswa')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">adduser</button>
-                    <button onclick="quickCmd('sudo smbpasswd -a siswa')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">smbpasswd</button>
-                    <button onclick="quickCmd('sudo systemctl restart smbd')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">restart smbd</button>
-                    <button onclick="quickCmd('submit-lab')" class="text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-2.5 py-1 rounded border border-emerald-700/80 font-bold whitespace-nowrap shrink-0">submit-lab</button>
-                </div>
-
-                <!-- Input Line -->
-                <form onsubmit="handleFormSubmit(event)" class="p-2 bg-black border-t border-slate-800 flex items-center gap-2 shrink-0">
-                    <span class="text-green-500 font-bold font-linux text-xs sm:text-sm shrink-0" id="promptText">root@debian:~#</span>
-                    <input type="text" id="cmdInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Ketik perintah di sini..." class="flex-grow bg-transparent text-slate-200 font-linux text-sm focus:outline-none">
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 flex items-center gap-1">
-                        <span>Kirim</span> <i class="fa-solid fa-paper-plane text-[10px]"></i>
-                    </button>
-                </form>
-                
-                <!-- GNU Nano Editor Overlay -->
-                <div id="nanoEditor" class="font-linux text-sm">
-                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
-                        <span class="font-bold text-xs">GNU nano 5.09</span>
-                        <span id="nanoTitle" class="text-xs truncate max-w-[160px]">File: ...</span>
-                        <div></div>
-                    </div>
-                    
-                    <div class="bg-slate-900 border-b border-slate-800 p-1.5 flex gap-2 shrink-0">
-                        <button type="button" onclick="saveAndExitNano()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan & Keluar
-                        </button>
-                        <button type="button" onclick="closeNano()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 px-3 rounded text-xs font-bold">
-                            Batal
-                        </button>
-                    </div>
-
-                    <textarea id="nanoTextarea" class="flex-grow bg-black text-slate-200 p-2 outline-none resize-none font-linux text-xs sm:text-sm leading-relaxed" spellcheck="false"></textarea>
-                    
-                    <div class="bg-slate-900 text-slate-400 px-2 py-1 text-[11px] border-t border-slate-800 shrink-0">
-                        <span id="nanoMessage">Tips: Tambahkan konfigurasi direktori share di baris paling bawah.</span>
-                    </div>
-                </div>
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[38%] md:min-w-[280px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
             </div>
-        </div>
 
-        <!-- Guide Panel Drawer -->
-        <div id="guidePanel" class="hidden absolute right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 bg-slate-900 border-l border-slate-700 shadow-2xl flex flex-col z-50">
-            <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800">
-                <h3 class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-folder-tree text-emerald-500 mr-2"></i>Panduan Praktikum Samba</h3>
-                <button onclick="showGuide()" class="text-slate-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-4 overflow-y-auto flex-grow text-xs sm:text-sm space-y-4 text-slate-300">
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
                 <div>
-                    <h4 class="font-bold text-emerald-400">1. Instalasi Samba</h4>
-                    <code onclick="quickCmd('sudo apt update')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt update</code>
-                    <code onclick="quickCmd('sudo apt install samba -y')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt install samba -y</code>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memahami instalasi Samba File Server di sistem operasi Linux.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Menyiapkan folder share dan mengonfigurasi izin akses (read/write).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mendaftarkan akun user Linux ke dalam kredensial Samba.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengonfigurasi file /etc/samba/smb.conf, Firewall, dan pengujian akses client.</li>
+                    </ul>
                 </div>
+
                 <div>
-                    <h4 class="font-bold text-emerald-400">2. Siapkan Folder Share</h4>
-                    <code onclick="quickCmd('sudo mkdir -p /srv/samba/data')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo mkdir -p /srv/samba/data</code>
-                    <code onclick="quickCmd('sudo chmod 777 /srv/samba/data')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo chmod 777 /srv/samba/data</code>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">3. Buat User Samba (misal: siswa)</h4>
-                    <code onclick="quickCmd('sudo adduser siswa')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo adduser siswa</code>
-                    <code onclick="quickCmd('sudo smbpasswd -a siswa')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo smbpasswd -a siswa</code>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">4. Konfigurasi smb.conf</h4>
-                    <code onclick="quickCmd('sudo nano /etc/samba/smb.conf')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo nano /etc/samba/smb.conf</code>
-                    <p class="text-[11px] mt-1 text-slate-400">Tambahkan baris berikut di paling bawah file Nano:</p>
-                    <pre class="bg-black p-2 rounded text-[10px] text-slate-300 select-all font-mono">[data_siswa]
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Instruksi Langkah Demi Langkah</h2>
+                    <ol class="space-y-5 text-sm text-slate-600 pl-1">
+                        
+                        <!-- Langkah 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 1: Instalasi Paket Samba</span>
+                            <p class="text-xs text-slate-500 mb-2">Perbarui indeks paket repositori server, lalu install paket samba.</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install samba -y</code>
+                                <button onclick="copyCmd('sudo apt install samba -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 my-1 font-semibold">Verifikasi:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">sudo systemctl status smbd</code>
+                                <button onclick="copyCmd('sudo systemctl status smbd')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">Jalankan perintah di atas untuk memastikan service Samba sudah berjalan.</p>
+                        </li>
+                        
+                        <!-- Langkah 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 2: Menyiapkan Folder Share</span>
+                            <p class="text-xs text-slate-500 mb-2">Buat folder khusus yang akan dibagikan di dalam jaringan, lalu atur hak aksesnya agar dapat dibaca dan ditulis (read/write).</p>
+                            
+                            <div class="space-y-1.5">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo mkdir -p /srv/samba/data</code>
+                                    <button onclick="copyCmd('sudo mkdir -p /srv/samba/data')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo chmod 777 /srv/samba/data</code>
+                                    <button onclick="copyCmd('sudo chmod 777 /srv/samba/data')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Langkah 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 3: Pembuatan User Samba</span>
+                            <p class="text-xs text-slate-500 mb-2">Samba membutuhkan akun user sistem Linux yang kemudian didaftarkan ke dalam database kredensial Samba.</p>
+                            
+                            <div class="space-y-1.5 mb-2">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo adduser siswa</code>
+                                    <button onclick="copyCmd('sudo adduser siswa')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo smbpasswd -a siswa</code>
+                                    <button onclick="copyCmd('sudo smbpasswd -a siswa')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded"><strong>Catatan:</strong> Password untuk <code>smbpasswd</code> bisa disamakan atau dibedakan dengan password login Linux siswa.</p>
+                        </li>
+
+                        <!-- Langkah 4 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 4: Konfigurasi File /etc/samba/smb.conf</span>
+                            <p class="text-xs text-slate-500 mb-2">Buka file konfigurasi utama Samba menggunakan text editor nano:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/samba/smb.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/samba/smb.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-600 mb-1.5 font-semibold">Gulir ke paling bawah file, lalu tambahkan baris konfigurasi blok share berikut:</p>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto mb-2">[data_siswa]
 path = /srv/samba/data
 browseable = yes
 read only = no
 valid users = siswa</pre>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">5. Firewall (UFW) & Restart</h4>
-                    <code onclick="quickCmd('sudo ufw allow samba')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw allow samba</code>
-                    <code onclick="quickCmd('sudo systemctl restart smbd')" class="block bg-black p-2 mt-2 rounded text-xs cursor-pointer">sudo systemctl restart smbd</code>
-                </div>
-                <div class="border-t border-slate-700 pt-3">
-                    <h4 class="font-bold text-yellow-400">6. Verifikasi Akhir</h4>
-                    <code onclick="quickCmd('submit-lab')" class="block bg-black p-2 mt-1 rounded text-xs text-yellow-300 font-bold cursor-pointer">submit-lab</code>
+                            
+                            <div class="bg-slate-50 border border-slate-200 p-2.5 rounded text-xs text-slate-800 space-y-1 mb-2">
+                                <span class="font-bold block text-slate-900">Penjelasan Konfigurasi:</span>
+                                <ul class="list-disc list-inside space-y-0.5 text-slate-700">
+                                    <li><code>[data_siswa]</code>: Nama folder share yang akan terlihat oleh komputer Client.</li>
+                                    <li><code>path</code>: Lokasi direktori fisik di dalam server.</li>
+                                    <li><code>browseable = yes</code>: Folder dapat terlihat saat dicari di jaringan.</li>
+                                    <li><code>read only = no</code>: Mengizinkan Client membuat, mengubah, atau menghapus file (Writeable).</li>
+                                    <li><code>valid users = siswa</code>: Mengunci akses folder hanya untuk user siswa.</li>
+                                </ul>
+                            </div>
+                            <p class="text-xs text-slate-500 italic">Tekan <strong>Ctrl + O</strong>, lalu <strong>Enter</strong> untuk menyimpan, dan <strong>Ctrl + X</strong> untuk keluar.</p>
+                        </li>
+
+                        <!-- Langkah 5 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 5: Konfigurasi Firewall & Restart Service</span>
+                            <p class="text-xs text-slate-500 mb-2">Izinkan lalu lintas data Samba pada UFW Firewall, lalu restart service Samba (smbd).</p>
+                            
+                            <div class="space-y-1.5 mb-2">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo ufw allow samba</code>
+                                    <button onclick="copyCmd('sudo ufw allow samba')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl restart smbd</code>
+                                    <button onclick="copyCmd('sudo systemctl restart smbd')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Pengujian -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-2">4. PENGUJIAN KONEKSI (TESTING)</span>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-slate-50 border border-slate-200 p-3 rounded-md text-xs space-y-1.5 text-slate-700">
+                                    <p class="font-bold text-slate-900"><i class="fa-brands fa-windows text-blue-500 mr-1"></i> A. Pengujian dari Client Windows</p>
+                                    <ol class="list-decimal list-inside pl-1 space-y-1 text-slate-600">
+                                        <li>Tekan tombol kombinasi <strong>Win + R</strong> pada keyboard untuk membuka jendela Run.</li>
+                                        <li>Ketik alamat IP Server dengan awalan double backslash:
+                                            <div class="my-1 font-mono text-[11px] bg-slate-200 p-1 rounded text-slate-800">\\IP_Server_Kamu</div>
+                                            <span class="text-[11px] text-slate-500">(Contoh: <code>\\192.168.1.100</code>)</span>
+                                        </li>
+                                        <li>Tekan <strong>Enter</strong>.</li>
+                                        <li>Saat muncul pop-up permintaan kredensial (Network Credentials):
+                                            <ul class="list-disc list-inside pl-3 my-0.5 text-slate-700">
+                                                <li><strong>Username:</strong> <code>siswa</code></li>
+                                                <li><strong>Password:</strong> (password Samba yang dibuat pada langkah 3)</li>
+                                            </ul>
+                                        </li>
+                                        <li>Buka folder <strong>data_siswa</strong>.</li>
+                                        <li><strong>Uji Coba:</strong> Buat file teks atau folder baru di dalamnya untuk memastikan fungsi read/write bekerja.</li>
+                                    </ol>
+                                </div>
+
+                                <div class="bg-slate-50 border border-slate-200 p-3 rounded-md text-xs space-y-1.5 text-slate-700">
+                                    <p class="font-bold text-slate-900"><i class="fa-brands fa-linux text-amber-600 mr-1"></i> B. Pengujian dari Client Linux</p>
+                                    <ol class="list-decimal list-inside pl-1 space-y-1 text-slate-600">
+                                        <li>Buka File Manager pada PC Client Linux.</li>
+                                        <li>Pilih menu <strong>Other Locations / Connect to Server</strong>.</li>
+                                        <li>Masukkan URL berikut:
+                                            <div class="my-1 font-mono text-[11px] bg-slate-200 p-1 rounded text-slate-800">smb://IP_Server_Kamu/data_siswa</div>
+                                        </li>
+                                        <li>Masukkan username <code>siswa</code> dan password Samba saat diminta.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </li>
+
+                    </ol>
                 </div>
             </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Jaringan Samba Server</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm">Samba Server (smbd)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.100</code>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Port 137,138(UDP) 139,445(TCP)</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Switch / Network</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-desktop text-4xl text-green-500 mb-2"></i>
+                        <span class="font-bold text-sm">Client PC (Win / Linux)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.50</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Install Paket Samba</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_dir" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Buat Folder Share & Chmod 777 (/srv/samba/data)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task2" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Buat User Sistem & Samba (siswa)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_conf" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi smb.conf ([data_siswa] & valid users)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ufw" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi UFW Firewall (allow samba)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task4" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Restart Service Samba (smbd)</span>
+                    </label>
+                </div>
+            </div>
+
         </div>
-    </main>
+
+        <!-- Draggable Resizer (Hanya Tampil di Tablet/Desktop) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@samba-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-desktop text-green-400"></i> Client PC Simulator
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux samba-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Fri, 04 Sep 2026 21:20:00 WIB from 192.168.1.50</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@samba-server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /etc/samba/smb.conf</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Workspace: Client / Testing Simulator -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-[#1e293b]">
+                <div id="clientTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux / Windows client-pc (192.168.1.50)</div>
+                    <div class="text-slate-500 mt-1 mb-2">Last login: Fri, 04 Sep 2026 21:22:15 WIB</div>
+                    <div class="text-xs text-slate-300 bg-slate-800/80 p-3 rounded border border-slate-700 mb-4">
+                        💡 <span class="font-semibold text-indigo-300">Pengujian Samba Client Simulator:</span>
+                        <p class="mt-1 text-slate-400">Gunakan perintah simulasi berikut untuk menguji Samba Server kamu:</p>
+                        <ul class="list-disc list-inside mt-1 space-y-1 text-slate-300">
+                            <li><code>smbclient //192.168.1.100/data_siswa -U siswa</code> (Uji koneksi Samba Linux)</li>
+                            <li><code>net use \\192.168.1.100\data_siswa</code> (Uji koneksi Run Windows)</li>
+                            <li><code>create test.txt</code> (Uji coba membuat file / hak akses write)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#3b82f6] font-bold font-linux text-[15px] shrink-0">C:\Users\siswa></span>
+                        <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Lab Samba Server</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // DOM Elements
         const terminalOutput = document.getElementById('terminalOutput');
         const cmdInput = document.getElementById('cmdInput');
+        const clientTerminalOutput = document.getElementById('clientTerminalOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
         const nanoEditor = document.getElementById('nanoEditor');
         const nanoTextarea = document.getElementById('nanoTextarea');
         const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
         
-        let currentDir = "~";
         let isNanoOpen = false;
         let currentFile = "";
-        
-        // Virtual File System
+        let fontSizeClass = "text-[15px]";
+
+        // Default file smb.conf
+        const defaultSmbConf = `# Default Samba Configuration
+[global]
+   workgroup = WORKGROUP
+   server string = Samba Server
+   server role = standalone server
+   log file = /var/log/samba/log.%m
+   max log size = 1000
+   logging = file
+   panic action = /usr/share/samba/panic-action %d
+
+# Tambahkan konfigurasi share di bagian paling bawah
+`;
+
+        // Virtual File System & State
         const fileSystem = {
-            "/etc/samba/smb.conf": "# Default config smb.conf\n[global]\n   workgroup = WORKGROUP\n   server string = %h server (Samba, Ubuntu)\n   log file = /var/log/samba/log.%m\n   max log size = 1000\n   logging = file\n   panic action = /usr/share/samba/panic-action %d\n"
+            "/etc/samba/smb.conf": defaultSmbConf
         };
 
-        // State sistem Samba
-        let sambaInstalled = false;
-        let folderSambaCreated = false;
-        let chmodDone = false;
-        let userSambaAdded = false;
-        let smbpasswdDone = false;
-        let ufwSambaOpen = false;
-        let sambaRestarted = false;
+        let state = { 
+            sambaInstalled: false, 
+            shareDirCreated: false, 
+            chmod777Done: false, 
+            sysUserCreated: false, 
+            smbUserCreated: false, 
+            ufwSamba: false, 
+            smbdRestarted: false 
+        };
 
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const command = cmdInput.value.trim();
-            if(!command) return;
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
 
-            printToTerminal(`<span class="text-green-500 font-bold">root@debian:${currentDir}#</span> ${command}`);
-            cmdInput.value = '';
-            processCommand(command);
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                
+                setTimeout(() => {
+                    const isServerActive = !document.getElementById('terminal-workspace-server').classList.contains('hidden');
+                    if (isServerActive) {
+                        document.getElementById('cmdInput').focus();
+                    } else {
+                        document.getElementById('clientCmdInput').focus();
+                    }
+                }, 100);
+            }
         }
 
-        function quickCmd(text) {
-            cmdInput.value = text;
-            printToTerminal(`<span class="text-green-500 font-bold">root@debian:${currentDir}#</span> ${text}`);
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        // Copy Command Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            document.getElementById('task1').checked = state.sambaInstalled;
+            document.getElementById('task_dir').checked = state.shareDirCreated && state.chmod777Done;
+            document.getElementById('task2').checked = state.sysUserCreated && state.smbUserCreated;
+            
+            // Periksa isi file /etc/samba/smb.conf
+            const conf = fileSystem["/etc/samba/smb.conf"] || "";
+            const isConfValid = conf.includes("[data_siswa]") && 
+                                conf.includes("path = /srv/samba/data") && 
+                                conf.includes("browseable = yes") && 
+                                conf.includes("read only = no") &&
+                                conf.includes("valid users = siswa");
+            
+            document.getElementById('task_conf').checked = isConfValid;
+            document.getElementById('task_ufw').checked = state.ufwSamba;
+            document.getElementById('task4').checked = state.smbdRestarted;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+            clientTerminalOutput.classList.remove(fontSizeClass);
+            clientCmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+            clientTerminalOutput.classList.add(fontSizeClass);
+            clientCmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@samba-server:~#</span> ${cmd}`);
             cmdInput.value = '';
-            processCommand(text);
+            processCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
         }
 
         function printToTerminal(html) {
@@ -228,219 +581,214 @@ valid users = siswa</pre>
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
 
-        function processCommand(rawCmd) {
-            if (!rawCmd) return;
-            const cmd = rawCmd.replace(/^sudo\s+/, '').trim();
-            const args = cmd.split(/\s+/);
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
             const baseCmd = args[0];
 
-            if(cmd === 'apt update') {
-                simulateLoading([
-                    "Hit:1 http://deb.debian.org/debian bookworm InRelease",
-                    "Reading package lists... Done",
-                    "All packages are up to date."
-                ]);
+            if(cleanCmd === 'apt update') { 
+                printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); 
             } 
-            else if(cmd === 'apt install samba -y' || cmd === 'apt-get install samba -y') {
-                simulateLoading([
-                    "Reading package lists... Done",
-                    "Unpacking samba (2:4.17.12+dfsg-0+deb12u1) ...",
-                    "Setting up samba (2:4.17.12+dfsg-0+deb12u1) ..."
-                ], () => { sambaInstalled = true; });
+            else if(cleanCmd.includes('apt install samba')) { 
+                state.sambaInstalled = true; 
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed: samba samba-common-bin\nSetting up samba (2:4.17.12+dfsg-0+deb12u1)..."); 
+                updateTasks(); 
             }
-            else if(baseCmd === 'nano') {
-                const file = args[1];
-                if(file) openNano(file);
-                else printToTerminal("nano: please specify a file to edit");
+            else if(cleanCmd === 'systemctl status smbd') {
+                const statusStr = state.sambaInstalled ? 
+                    "<span class='text-green-400'>● smbd.service - Samba SMB Daemon\n   Loaded: loaded (/lib/systemd/system/smbd.service; enabled; vendor preset: enabled)\n   Active: active (running) since Fri 2026-09-04 21:20:10 WIB; 5min ago</span>" :
+                    "Unit smbd.service could not be found.";
+                printToTerminal(statusStr);
             }
-            else if(baseCmd === 'adduser') {
-                const username = args[1];
-                if(username) {
-                    userSambaAdded = true;
-                    simulateLoading([
-                        `Adding user '${username}' ...`,
-                        `Adding new group '${username}' ...`,
-                        `Creating home directory '/home/${username}' ...`,
-                        "New password: ****",
-                        "Retype new password: ****",
-                        "passwd: password updated successfully"
-                    ]);
+            else if(baseCmd === 'nano') { 
+                if(args[1]) openNano(args[1]); 
+            }
+            else if(cleanCmd.includes('mkdir') && cleanCmd.includes('/srv/samba/data')) {
+                state.shareDirCreated = true;
+                printToTerminal("Directory created: /srv/samba/data");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('chmod 777 /srv/samba/data')) {
+                state.chmod777Done = true;
+                printToTerminal("Mode of `/srv/samba/data' changed to 0777 (rwxrwxrwx)");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('adduser siswa')) {
+                state.sysUserCreated = true;
+                printToTerminal("Adding user `siswa' ...\nAdding new group `siswa' (1001) ...\nAdding new user `siswa' (1001) with group `siswa' ...\nCreating home directory `/home/siswa' ...\nCopying files from `/etc/skel' ...\nNew password: ********\nRetype new password: ********\npasswd: password updated successfully");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('smbpasswd -a siswa')) {
+                state.smbUserCreated = true;
+                printToTerminal("New SMB password: ********\nRetype new SMB password: ********\nAdded user siswa.");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('ufw allow samba')) { 
+                state.ufwSamba = true; 
+                printToTerminal("Rules updated\nRules updated (v6)"); 
+                updateTasks(); 
+            }
+            else if(cleanCmd.includes('systemctl restart smbd')) { 
+                state.smbdRestarted = true; 
+                printToTerminal("<span class='text-green-400'>[ OK ] Restarted smbd (Samba SMB Daemon)</span>"); 
+                updateTasks(); 
+            }
+            else if(cmd === 'submit-lab') { verifySubmission(); }
+            else if(cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${args[0]}: command not found`); }
+            
+            if(!isNanoOpen) cmdInput.focus();
+        }
+
+        // Client Terminal Core Engine
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">C:\\Users\\siswa&gt;</span> ${cmd}`);
+            clientCmdInput.value = '';
+            processClientCommand(cmd);
+        }
+
+        function printToClientTerminal(html) {
+            clientTerminalOutput.innerHTML += `<div>${html}</div>`;
+            clientTerminalOutput.scrollTop = clientTerminalOutput.scrollHeight;
+        }
+
+        function processClientCommand(cmd) {
+            const args = cmd.split(' ').filter(a => a.length > 0);
+            const baseCmd = args[0];
+
+            if (baseCmd === 'clear') {
+                clientTerminalOutput.innerHTML = '';
+                return;
+            }
+
+            const conf = fileSystem["/etc/samba/smb.conf"] || "";
+            const isServerReady = state.sambaInstalled && state.smbdRestarted;
+            const isFirewallOpen = state.ufwSamba;
+            const isConfValid = conf.includes("[data_siswa]") && conf.includes("path = /srv/samba/data") && conf.includes("valid users = siswa");
+            const isReadWrite = conf.includes("read only = no");
+
+            if (cmd.includes('\\192.168.1.100') || cmd.includes('smbclient')) {
+                if (!isServerReady) {
+                    printToClientTerminal("<span class='text-red-400'>Error: Network path not found (Samba service 'smbd' not running on server).</span>");
+                    return;
+                }
+
+                if (!isFirewallOpen) {
+                    printToClientTerminal("<span class='text-red-400'>Error: Connection timed out. Check UFW Firewall rules on Samba Server.</span>");
+                    return;
+                }
+
+                if (!isConfValid) {
+                    printToClientTerminal("<span class='text-red-400'>Error: Share [data_siswa] not found on \\192.168.1.100. Check /etc/samba/smb.conf!</span>");
+                    return;
+                }
+
+                if (state.sysUserCreated && state.smbUserCreated) {
+                    printToClientTerminal("<span class='text-green-400'>[ OK ] Connected to \\\\192.168.1.100\\data_siswa successfully!\nUser: siswa\nStatus: Active Session Established.</span>");
                 } else {
-                    printToTerminal("adduser: please specify a username");
+                    printToClientTerminal("<span class='text-red-400'>System error 86: The specified network password is not correct (User 'siswa' not found in Samba database).</span>");
                 }
-            }
-            else if(baseCmd === 'smbpasswd') {
-                if(args[1] === '-a' && args[2]) {
-                    smbpasswdDone = true;
-                    simulateLoading([
-                        `New SMB password:`,
-                        `Retype new SMB password:`,
-                        `Added user ${args[2]}.`
-                    ]);
+            } 
+            else if (baseCmd === 'create' || baseCmd === 'touch' || baseCmd === 'mkdir') {
+                if (!isServerReady || !state.smbUserCreated) {
+                    printToClientTerminal("<span class='text-red-400'>Error: Not connected to Samba Share.</span>");
+                    return;
+                }
+                if (isReadWrite && state.chmod777Done) {
+                    printToClientTerminal("<span class='text-green-400'>[ OK ] File / Directory created successfully inside \\\\192.168.1.100\\data_siswa!\nPermission Test: Read/Write Access OK.</span>");
                 } else {
-                    printToTerminal("Usage: smbpasswd -a <username>");
+                    printToClientTerminal("<span class='text-red-400'>Access is denied (read only = yes or folder permission chmod 777 missing).</span>");
                 }
-            }
-            else if(baseCmd === 'mkdir') {
-                const path = args.join(' ');
-                if(path.includes('/srv/samba/data')) {
-                    folderSambaCreated = true;
-                    printToTerminal(""); 
-                }
-            }
-            else if(baseCmd === 'chmod') {
-                if(args[1] === '777' && args[2] && args[2].includes('/srv/samba/data')) {
-                    chmodDone = true;
-                }
-                printToTerminal(""); 
-            }
-            else if(baseCmd === 'ufw') {
-                if(cmd.includes('allow samba')) {
-                    ufwSambaOpen = true;
-                    printToTerminal("Rule added\nRule added (v6)");
-                } else if(cmd.includes('reload')) {
-                    printToTerminal("Firewall reloaded");
-                }
-            }
-            else if(cmd === 'systemctl restart smbd' || cmd === 'service smbd restart') {
-                if(!sambaInstalled) printToTerminal("Failed to restart smbd.service: Unit smbd.service not found.");
-                else {
-                    sambaRestarted = true;
-                    printToTerminal("<span class='text-emerald-400'>[ OK ] Restarted Samba SMB Daemon.</span>");
-                }
-            }
-            else if(cmd === 'submit-lab') {
-                verifySubmission();
-            }
-            else if(cmd === 'clear') {
-                terminalOutput.innerHTML = '';
             }
             else {
-                printToTerminal(`bash: ${baseCmd}: command not found`);
+                printToClientTerminal(`Command '${baseCmd}' not recognized. Cobalah perintah: <code>net use \\\\192.168.1.100\\data_siswa</code> atau <code>smbclient //192.168.1.100/data_siswa -U siswa</code>`);
             }
         }
 
-        // --- VERIFIKASI PRAKTIKUM (SUBMIT-LAB) ---
-        function verifySubmission() {
-            printToTerminal("<div class='text-yellow-400 my-1'>[SYSTEM] Memeriksa kelengkapan konfigurasi Samba...</div>");
-
-            const smbConf = fileSystem["/etc/samba/smb.conf"] || "";
-
-            let checks = [];
-            let isAllOk = true;
-
-            // 1. Cek Paket
-            if (sambaInstalled) checks.push("<span class='text-green-400'>✔ [PASSED] Paket samba terinstal.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] Paket samba belum diinstal.</span>"); isAllOk = false; }
-
-            // 2. Cek Folder & Hak Akses
-            if (folderSambaCreated && chmodDone) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] Direktori /srv/samba/data dan hak akses siap.</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] Folder share belum dibuat atau chmod belum dijalankan.</span>");
-                isAllOk = false;
-            }
-
-            // 3. Cek User Samba
-            if (userSambaAdded && smbpasswdDone) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] User dan password Samba telah dibuat.</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] User sistem/samba belum ditambahkan.</span>");
-                isAllOk = false;
-            }
-
-            // 4. Cek Konfigurasi smb.conf
-            const hasShareName = smbConf.includes("[data_siswa]");
-            const hasPath = smbConf.includes("path = /srv/samba/data") || smbConf.includes("path=/srv/samba/data");
-            const hasReadOnly = smbConf.includes("read only = no") || smbConf.includes("read only=no");
-
-            if (hasShareName && hasPath && hasReadOnly) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] File smb.conf dikonfigurasi dengan blok share [data_siswa].</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] Konfigurasi di smb.conf belum lengkap (Cek path dan read only).</span>");
-                isAllOk = false;
-            }
-            
-            // 5. Cek UFW
-            if (ufwSambaOpen) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] Port Firewall (Samba App Profile) diizinkan.</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] Aturan UFW untuk samba belum ditambahkan.</span>");
-                isAllOk = false;
-            }
-
-            // 6. Cek Restart
-            if (sambaRestarted) checks.push("<span class='text-green-400'>✔ [PASSED] Service smbd telah di-restart.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] Service smbd belum di-restart.</span>"); isAllOk = false; }
-
-            checks.forEach(c => printToTerminal(c));
-
-            if (isAllOk) {
-                const randomHex = Math.floor(Math.random() * 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
-                const token = `SUCCESS-${randomHex}-SAMBA`;
-                
-                printToTerminal(`
-<div class='mt-2 mb-2 p-3 border border-emerald-500 bg-emerald-950/60 rounded text-emerald-200'>
-    <div class='font-bold text-emerald-400 text-base'><i class='fa-solid fa-circle-check mr-1'></i>VERIFIKASI TUNTAS!</div>
-    <div class='mt-2 pt-2 border-t border-emerald-800'>
-        <span class='text-[10px] text-slate-300 block uppercase'>TOKEN KELULUSAN SAMBA:</span>
-        <span class='text-xl font-mono font-bold text-yellow-300 tracking-wider block my-1 select-all'>${token}</span>
-        <span class='text-[10px] text-slate-400 italic'>* Salin dan kirimkan token ini ke Instruktur.</span>
-    </div>
-</div>`);
-            } else {
-                printToTerminal(`
-<div class='mt-2 mb-2 p-2 border border-red-500/50 bg-red-950/30 rounded text-red-300 text-xs'>
-    <span class='font-bold text-red-400 block'><i class='fa-solid fa-triangle-exclamation mr-1'></i>VERIFIKASI BELUM LENGKAP</span>
-    Perbaiki poin <span class='text-red-400 font-bold'>[FAILED]</span> di atas, lalu jalankan <span class='text-yellow-300 font-bold'>submit-lab</span> kembali.
-</div>`);
-            }
-        }
-
-        function simulateLoading(lines, callback = null) {
-            let i = 0;
-            function nextLine() {
-                if(i < lines.length) {
-                    printToTerminal(lines[i]);
-                    i++;
-                    setTimeout(nextLine, 100);
-                } else if(callback) callback();
-            }
-            nextLine();
-        }
-
-        // --- NANO EDITOR ---
+        // Nano Editor
         function openNano(file) {
-            isNanoOpen = true;
+            isNanoOpen = true; 
             currentFile = file;
             nanoTitle.textContent = `File: ${file}`;
-            
-            if(fileSystem[file] === undefined) {
-                fileSystem[file] = "";
-            }
-            
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
             nanoTextarea.value = fileSystem[file];
             nanoEditor.style.display = 'flex';
         }
 
         function saveAndExitNano() {
             fileSystem[currentFile] = nanoTextarea.value;
-            printToTerminal(`<span class="text-slate-400">[ Saved file ${currentFile} ]</span>`);
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
             closeNano();
         }
 
         function closeNano() {
-            isNanoOpen = false;
-            nanoEditor.style.display = 'none';
-        }
-
-        function showGuide() {
-            document.getElementById('guidePanel').classList.toggle('hidden');
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            cmdInput.focus();
         }
         
-        function resetLab() {
-            location.reload();
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Samba File Server?")) location.reload(); 
         }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            const conf = fileSystem["/etc/samba/smb.conf"] || "";
+            
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.sambaInstalled, text: "Paket Samba Terinstal" },
+                { cond: state.shareDirCreated, text: "Folder Share /srv/samba/data Dibuat" },
+                { cond: state.chmod777Done, text: "Izin Akses Full (chmod 777) Diberikan" },
+                { cond: state.sysUserCreated, text: "User Sistem Linux (siswa) Dibuat" },
+                { cond: state.smbUserCreated, text: "User Samba Didaftarkan (smbpasswd -a siswa)" },
+                { cond: conf.includes("[data_siswa]"), text: "Blok Share [data_siswa] Ditambahkan" },
+                { cond: conf.includes("path = /srv/samba/data"), text: "Aturan path = /srv/samba/data (smb.conf)" },
+                { cond: conf.includes("browseable = yes"), text: "Aturan browseable = yes (smb.conf)" },
+                { cond: conf.includes("read only = no"), text: "Aturan read only = no (smb.conf)" },
+                { cond: conf.includes("valid users = siswa"), text: "Aturan valid users = siswa (smb.conf)" },
+                { cond: state.ufwSamba, text: "UFW Firewall Allow Samba Diaktifkan" },
+                { cond: state.smbdRestarted, text: "Service Samba (smbd) Direstart" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-SAMBA</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Silakan lengkapi konfigurasi yang bertanda silang merah, lalu klik Verify Target kembali.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
+        });
     </script>
 </body>
 </html>
