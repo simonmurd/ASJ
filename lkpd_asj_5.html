@@ -2,13 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pro BIND9 DNS Server Simulator</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -18,26 +16,19 @@
             font-family: 'Inter', sans-serif; 
             touch-action: manipulation;
         }
-        .font-linux { 
-            font-family: 'Ubuntu Mono', monospace; 
-        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
         
-        /* Custom Scrollbar for Terminal */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
         .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px;}
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-        /* Custom Scrollbar for Cards */
-        .card-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .card-scroll::-webkit-scrollbar-track { background: transparent; }
-        .card-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px;}
-        .card-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Hide Scrollbar for Quick Buttons */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Nano Editor Overlay */
+        #resizer { cursor: col-resize; }
+        
         #nanoEditor {
             display: none;
             position: absolute;
@@ -48,43 +39,86 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased h-screen flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900 p-2 sm:p-4 md:p-6 lg:p-8">
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
 
-    <div class="flex flex-col md:flex-row gap-4 mb-4 md:mb-6 shrink-0">
-        
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5 flex-1 relative overflow-hidden flex flex-col justify-start md:h-[260px] h-[220px]">
-            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-            <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2 ml-2 shrink-0">
-                <i class="fa-solid fa-bullseye text-blue-500"></i> Teori Singkat & Tujuan Praktikum
-            </h2>
-            <ul class="space-y-2 text-xs md:text-sm text-slate-600 ml-2 overflow-y-auto card-scroll pr-2">
-                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Memahami instalasi DNS Server (BIND9).</li>
-                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Mengonfigurasi Forward & Reverse Zone.</li>
-                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Manajemen file database <code>db.smk</code> dan <code>db.192</code>.</li>
-                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-500 mt-0.5"></i> Meningkatkan efisiensi kerja menggunakan CLI.</li>
-            </ul>
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-server text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">BIND9 DNS</span>
         </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
 
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5 flex-1 relative overflow-hidden flex flex-col justify-start md:h-[260px] h-[300px]">
-            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
-            <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2 ml-2 shrink-0">
-                <i class="fa-solid fa-microchip text-indigo-500"></i> Panduan Praktikum
-            </h2>
-            <ol class="space-y-4 text-xs md:text-sm text-slate-600 ml-2 overflow-y-auto card-scroll pr-2 pb-2">
-                <!-- Step 1 -->
-                <li>
-                    <span class="font-bold text-slate-800">1. Instalasi</span>
-                    <div class="flex flex-col gap-1.5 mt-1.5">
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">apt update</code>
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">apt install bind9 bind9utils dnsutils -y</code>
-                    </div>
-                </li>
-                <!-- Step 2 -->
-                <li>
-                    <span class="font-bold text-slate-800">2. Konfigurasi Zone</span>
-                    <div class="flex flex-col gap-1.5 mt-1.5">
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">nano /etc/bind/named.conf.local</code>
-                        <pre class="bg-slate-800 text-slate-200 p-2.5 rounded-md text-[11px] font-mono leading-tight overflow-x-auto">zone "smk.net" {
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal
+        </button>
+    </div>
+
+    <!-- Main Workspace (Split Screen di PC, Tabbed di HP) -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[35%] md:min-w-[250px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memahami instalasi DNS Server (BIND9).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengonfigurasi Forward & Reverse Zone.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Manajemen file database <code>db.smk</code> dan <code>db.192</code>.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Instruksi</h2>
+                    <ol class="space-y-5 text-sm text-slate-600 pl-1">
+                        <!-- Step 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Update & Instalasi BIND9</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">apt update</code>
+                                <button onclick="copyCmd('apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">apt install bind9 bind9utils dnsutils -y</code>
+                                <button onclick="copyCmd('apt install bind9 bind9utils dnsutils -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+                        
+                        <!-- Step 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Konfigurasi Zone</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">nano /etc/bind/named.conf.local</code>
+                                <button onclick="copyCmd('nano /etc/bind/named.conf.local')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-tight overflow-x-auto relative group">zone "smk.net" {
     type master;
     file "/etc/bind/db.smk";
 };
@@ -92,153 +126,344 @@ zone "10.168.192.in-addr.arpa" {
     type master;
     file "/etc/bind/db.192";
 };</pre>
+                        </li>
+
+                        <!-- Step 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Salin File Database</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">cp /etc/bind/db.local /etc/bind/db.smk</code>
+                                <button onclick="copyCmd('cp /etc/bind/db.local /etc/bind/db.smk')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">cp /etc/bind/db.127 /etc/bind/db.192</code>
+                                <button onclick="copyCmd('cp /etc/bind/db.127 /etc/bind/db.192')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <!-- Step 4 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">4. Edit Database & Restart</span>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">nano /etc/bind/db.smk</code>
+                                <button onclick="copyCmd('nano /etc/bind/db.smk')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 ml-1">* Ubah A record IP 127.0.0.1 menjadi 192.168.10.1</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">nano /etc/bind/db.192</code>
+                                <button onclick="copyCmd('nano /etc/bind/db.192')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2 ml-1">* Ubah localhost. menjadi smk.net.</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">systemctl restart bind9</code>
+                                <button onclick="copyCmd('systemctl restart bind9')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Jaringan BIND9</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[200px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm">DNS Server</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.10.1</code>
                     </div>
-                </li>
-                <!-- Step 3 -->
-                <li>
-                    <span class="font-bold text-slate-800">3. Buat File Database</span>
-                    <div class="flex flex-col gap-1.5 mt-1.5">
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">cp /etc/bind/db.local /etc/bind/db.smk</code>
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">cp /etc/bind/db.127 /etc/bind/db.192</code>
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">nano /etc/bind/db.smk</code>
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">nano /etc/bind/db.192</code>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[200px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Switch (VMnet)</span>
                     </div>
-                </li>
-                <!-- Step 4 -->
-                <li>
-                    <span class="font-bold text-slate-800">4. Restart Layanan</span>
-                    <div class="mt-1.5">
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">systemctl restart bind9</code>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[200px]">
+                        <i class="fa-solid fa-laptop text-4xl text-green-500 mb-2"></i>
+                        <span class="font-bold text-sm">Client PC</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.10.10</code>
                     </div>
-                </li>
-                <!-- Step 5 -->
-                <li>
-                    <span class="font-bold text-slate-800">5. Verifikasi Akhir</span>
-                    <div class="mt-1.5">
-                        <code class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200 font-mono text-xs w-fit">submit-lab</code>
-                    </div>
-                </li>
-            </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Install BIND9 Packages</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task2" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Copy Forward Zone File</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task3" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Copy Reverse Zone File</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_named" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi named.conf.local</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task4" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Restart BIND9 Service</span>
+                    </label>
+                </div>
+            </div>
+
         </div>
 
+        <!-- Draggable Resizer (Hanya Tampil di Tablet/Desktop) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@dns-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-green-400"></i> user@client-pc
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux dns-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Fri, 04 Sep 2026 04:31:34 WIB from 192.168.1.10</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@dns:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 5.09</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: ...</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Workspace: Client (Interactive) -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-[#1e293b]">
+                <div id="clientTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux client-pc 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-2">Last login: Fri, 04 Sep 2026 04:35:10 WIB</div>
+                    <div class="text-xs text-slate-400 bg-slate-800/60 p-2.5 rounded border border-slate-700/60 mb-4">
+                        💡 <span class="font-semibold text-slate-300">Gunakan terminal ini untuk pengujian DNS:</span>
+                        <ul class="list-disc list-inside mt-1 space-y-0.5 text-slate-400">
+                            <li><code>nslookup smk.net</code> atau <code>nslookup 192.168.10.1</code></li>
+                            <li><code>dig smk.net</code></li>
+                            <li><code>ping smk.net</code> atau <code>ping 192.168.10.1</code></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#3b82f6] font-bold font-linux text-[15px] shrink-0">user@client:~$</span>
+                        <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <main class="flex-grow flex flex-col bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-xl p-2 md:p-3 overflow-hidden relative">
-        
-        <div class="w-full h-full bg-[#0f172a] rounded-xl flex flex-col relative overflow-hidden shadow-inner">
-            
-            <div class="bg-[#1e293b] px-4 py-3 flex items-center justify-between shrink-0">
-                <div class="flex gap-2 w-20">
-                    <div class="w-3 h-3 rounded-full bg-red-500 border border-red-600/50 cursor-pointer" onclick="resetLab()" title="Reset Lab"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500 border border-yellow-600/50"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500 border border-green-600/50"></div>
-                </div>
-                <div class="text-slate-400 text-xs font-medium flex items-center gap-2 font-mono">
-                    <i class="fa-solid fa-folder text-slate-500"></i> bind9-praktikum — bash — 80x24
-                </div>
-                <div class="w-20 flex justify-end">
-                    <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">LIVE ENV</span>
-                </div>
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Lab</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
-            <div class="bg-[#182132] px-4 py-2 border-b border-slate-700/50 flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar">
-                <i class="fa-solid fa-circle-info text-blue-400 text-xs"></i>
-                <span class="text-xs text-slate-300 font-mono whitespace-nowrap">
-                    Coba ketik: 
-                    <code class="bg-[#0f172a] px-1.5 py-0.5 rounded text-blue-300 cursor-pointer hover:bg-slate-700" onclick="quickCmd('apt update')">apt update</code> , 
-                    <code class="bg-[#0f172a] px-1.5 py-0.5 rounded text-blue-300 cursor-pointer hover:bg-slate-700" onclick="quickCmd('apt install bind9 bind9utils dnsutils -y')">apt install bind9...</code> ,
-                    <code class="bg-[#0f172a] px-1.5 py-0.5 rounded text-blue-300 cursor-pointer hover:bg-slate-700" onclick="quickCmd('nano /etc/bind/named.conf.local')">nano ...</code>
-                </span>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
             </div>
-            
-            <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-sm md:text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-20">
-<div class="text-slate-400 font-bold">Linux dns-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
-<div class="text-slate-500 mt-1 mb-4">Last login: Fri, 04 Sep 2026 04:31:34 WIB from 192.168.1.10</div></div>
-
-            <div class="bg-[#182132] p-2 md:p-3 border-t border-slate-700 flex flex-col gap-2 shrink-0 absolute bottom-0 left-0 right-0 z-20">
-                <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2 px-1">
-                    <span class="text-[#4ade80] font-bold font-linux text-sm shrink-0" id="promptText">root@dns:~#</span>
-                    <input type="text" id="cmdInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-sm focus:outline-none" autofocus>
-                </form>
-                
-                <div class="flex gap-1.5 overflow-x-auto no-scrollbar items-center mt-1 pb-1">
-                    <button onclick="quickCmd('cp /etc/bind/db.local /etc/bind/db.smk')" class="bg-[#334155] hover:bg-[#475569] text-slate-200 px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0 shrink-0">cp db.local</button>
-                    <button onclick="quickCmd('cp /etc/bind/db.127 /etc/bind/db.192')" class="bg-[#334155] hover:bg-[#475569] text-slate-200 px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0 shrink-0">cp db.127</button>
-                    <button onclick="quickCmd('nano /etc/bind/db.smk')" class="bg-[#334155] hover:bg-[#475569] text-slate-200 px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0 shrink-0">nano db.smk</button>
-                    <button onclick="quickCmd('nano /etc/bind/db.192')" class="bg-[#334155] hover:bg-[#475569] text-slate-200 px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0 shrink-0">nano db.192</button>
-                    <button onclick="quickCmd('systemctl restart bind9')" class="bg-[#334155] hover:bg-[#475569] text-slate-200 px-3 py-1.5 rounded-md text-xs font-mono whitespace-nowrap border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0 shrink-0">restart</button>
-                    
-                    <div class="flex-grow"></div> <button onclick="quickCmd('submit-lab')" class="bg-red-800/80 hover:bg-red-700 text-red-100 px-3 py-1.5 rounded-md text-xs font-bold font-mono whitespace-nowrap border-b-2 border-red-950 active:border-t-2 active:border-b-0 shrink-0">SUBMIT-LAB</button>
-                    <button onclick="submitFormTrigger()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md text-xs font-bold font-mono whitespace-nowrap border-b-2 border-blue-900 active:border-t-2 active:border-b-0 shrink-0 flex items-center gap-1">ENTER <span>↵</span></button>
-                </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
             </div>
-
-            <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[80px]"> <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
-                    <span class="font-bold text-xs">GNU nano 5.09</span>
-                    <span id="nanoTitle" class="text-xs truncate max-w-[160px] md:max-w-md text-center">File: ...</span>
-                    <div class="w-20"></div>
-                </div>
-                
-                <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
-                
-                <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
-                    <button type="button" onclick="saveAndExitNano()" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-1.5 px-3 rounded-md text-xs font-bold flex items-center justify-center gap-2 border-b-2 border-green-900 active:border-t-2 active:border-b-0">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan & Keluar
-                    </button>
-                    <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1.5 px-4 rounded-md text-xs font-bold border-b-2 border-[#1e293b] active:border-t-2 active:border-b-0">
-                        Batal
-                    </button>
-                </div>
-            </div>
-
         </div>
-    </main>
+    </div>
 
     <script>
+        // DOM Elements
         const terminalOutput = document.getElementById('terminalOutput');
         const cmdInput = document.getElementById('cmdInput');
+        const clientTerminalOutput = document.getElementById('clientTerminalOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
         const nanoEditor = document.getElementById('nanoEditor');
         const nanoTextarea = document.getElementById('nanoTextarea');
         const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
         
-        let currentDir = "~";
         let isNanoOpen = false;
         let currentFile = "";
-        
-        // Virtual File System
+        let fontSizeClass = "text-[15px]";
+
+        // Virtual File System & State
         const fileSystem = {
-            "/etc/bind/named.conf.local": "//\n// Do any local configuration here\n//\nzone \"smk.net\" {\n    type master;\n    file \"/etc/bind/db.smk\";\n};\nzone \"10.168.192.in-addr.arpa\" {\n    type master;\n    file \"/etc/bind/db.192\";\n};\n",
-            "/etc/bind/db.smk": ";\n; BIND data file for local loopback interface\n;\n$TTL    604800\n@       IN      SOA     localhost. root.localhost. (\n                              2         ; Serial\n                         604800         ; Refresh\n                          86400         ; Retry\n                        2419200         ; Expire\n                         604800 )       ; Negative Cache TTL\n;\n@       IN      NS      localhost.\n@       IN      A       127.0.0.1\n",
-            "/etc/bind/db.192": ";\n; BIND reverse data file for local loopback interface\n;\n$TTL    604800\n@       IN      SOA     localhost. root.localhost. (\n                              1         ; Serial\n                         604800         ; Refresh\n                          86400         ; Retry\n                        2419200         ; Expire\n                         604800 )       ; Negative Cache TTL\n;\n@       IN      NS      localhost.\n1.0.0   IN      PTR     localhost.\n"
+            "/etc/bind/named.conf.local": "// Do any local configuration here\n",
+            "/etc/bind/db.smk": "; BIND data file for local loopback\n$TTL 604800\n@ IN SOA localhost. root.localhost. (2 604800 86400 2419200 604800)\n@ IN NS localhost.\n@ IN A 127.0.0.1\n",
+            "/etc/bind/db.192": "; BIND reverse data file\n$TTL 604800\n@ IN SOA localhost. root.localhost. (1 604800 86400 2419200 604800)\n@ IN NS localhost.\n1.0.0 IN PTR localhost.\n"
+        };
+        let state = { bindInstalled: false, dbSmkCopied: false, db192Copied: false, bindRestarted: false };
+
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                
+                // Auto-focus input terminal saat berpindah di HP
+                setTimeout(() => {
+                    const isServerActive = !document.getElementById('terminal-workspace-server').classList.contains('hidden');
+                    if (isServerActive) {
+                        document.getElementById('cmdInput').focus();
+                    } else {
+                        document.getElementById('clientCmdInput').focus();
+                    }
+                }, 100);
+            }
+        }
+
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
         };
 
-        // State sistem
-        let bindInstalled = false;
-        let dbSmkCopied = false;
-        let db192Copied = false;
-        let bindRestarted = false;
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
 
-        function submitFormTrigger() {
-            const e = new Event('submit', { cancelable: true });
-            document.querySelector('form').dispatchEvent(e);
-            handleFormSubmit(e);
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
         }
 
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        // Copy Command Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            document.getElementById('task1').checked = state.bindInstalled;
+            document.getElementById('task2').checked = state.dbSmkCopied;
+            document.getElementById('task3').checked = state.db192Copied;
+            
+            // Deteksi isi named.conf.local untuk checklist UI
+            const namedConf = fileSystem["/etc/bind/named.conf.local"] || "";
+            document.getElementById('task_named').checked = namedConf.includes("smk.net") && namedConf.includes("10.168.192.in-addr.arpa");
+            
+            document.getElementById('task4').checked = state.bindRestarted;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+            clientTerminalOutput.classList.remove(fontSizeClass);
+            clientCmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+            clientTerminalOutput.classList.add(fontSizeClass);
+            clientCmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
         function handleFormSubmit(e) {
             if(e) e.preventDefault();
-            const command = cmdInput.value.trim();
-            if(!command) return;
-
-            printToTerminal(`<span class="text-[#4ade80] font-bold">root@dns:${currentDir}#</span> ${command}`);
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@dns:~#</span> ${cmd}`);
             cmdInput.value = '';
-            processCommand(command);
+            processCommand(cmd);
         }
 
-        function quickCmd(text) {
-            cmdInput.value = text;
-            printToTerminal(`<span class="text-[#4ade80] font-bold">root@dns:${currentDir}#</span> ${text}`);
-            cmdInput.value = '';
-            processCommand(text);
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
         }
 
         function printToTerminal(html) {
@@ -247,168 +472,186 @@ zone "10.168.192.in-addr.arpa" {
         }
 
         function processCommand(cmd) {
-            if (!cmd) return;
             const args = cmd.split(' ');
             const baseCmd = args[0];
 
-            if(cmd === 'apt update') {
-                simulateLoading([
-                    "Hit:1 http://deb.debian.org/debian bookworm InRelease",
-                    "Reading package lists... Done",
-                    "All packages are up to date."
-                ]);
-            } 
-            else if(cmd === 'apt install bind9 bind9utils dnsutils -y' || cmd === 'apt-get install bind9 bind9utils dnsutils -y') {
-                simulateLoading([
-                    "Reading package lists... Done",
-                    "Unpacking bind9 (1:9.18.16-1~deb12u1) ...",
-                    "Setting up bind9 (1:9.18.16-1~deb12u1) ...",
-                    "Setting up dnsutils (1:9.18.16-1~deb12u1) ..."
-                ], () => { bindInstalled = true; });
-            }
+            if(cmd === 'apt update') { printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); } 
+            else if(cmd.includes('apt install bind9')) { state.bindInstalled = true; printToTerminal("Setting up bind9..."); updateTasks(); }
             else if(baseCmd === 'cp') {
-                if(cmd === 'cp /etc/bind/db.local /etc/bind/db.smk') {
-                    dbSmkCopied = true;
-                    printToTerminal("Copied /etc/bind/db.local -> /etc/bind/db.smk");
-                } else if(cmd === 'cp /etc/bind/db.127 /etc/bind/db.192') {
-                    db192Copied = true;
-                    printToTerminal("Copied /etc/bind/db.127 -> /etc/bind/db.192");
-                } else {
-                    printToTerminal("cp: missing file operand");
-                }
+                if(cmd.includes('db.local') && cmd.includes('db.smk')) { state.dbSmkCopied = true; printToTerminal("Copied to db.smk"); }
+                else if(cmd.includes('db.127') && cmd.includes('db.192')) { state.db192Copied = true; printToTerminal("Copied to db.192"); }
+                updateTasks();
             }
-            else if(baseCmd === 'nano') {
-                const file = args[1];
-                if(file) openNano(file);
-                else printToTerminal("nano: please specify a file to edit");
-            }
-            else if(cmd === 'systemctl restart bind9' || cmd === 'service bind9 restart' || cmd === 'restart') {
-                if(!bindInstalled) printToTerminal("Failed to restart bind9.service: Unit bind9.service not found.");
-                else {
-                    bindRestarted = true;
-                    printToTerminal("<span class='text-green-400'>[ OK ] Restarted BIND9 Domain Name Server.</span>");
-                }
-            }
-            else if(cmd === 'submit-lab') {
-                verifySubmission();
-            }
-            else if(cmd === 'clear') {
-                terminalOutput.innerHTML = '';
-            }
-            else {
-                printToTerminal(`bash: ${cmd}: command not found`);
-            }
-            
-            // Refocus input after command run
-            cmdInput.focus();
+            else if(baseCmd === 'nano') { if(args[1]) openNano(args[1]); }
+            else if(cmd.includes('restart bind9')) { state.bindRestarted = true; printToTerminal("<span class='text-green-400'>[ OK ] Restarted BIND9</span>"); updateTasks(); }
+            else if(cmd === 'submit-lab') { verifySubmission(); }
+            else if(cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${cmd}: command not found`); }
+            if(!isNanoOpen) cmdInput.focus();
         }
 
-        // --- VERIFIKASI PRAKTIKUM (SUBMIT-LAB) ---
-        function verifySubmission() {
-            printToTerminal("<div class='text-yellow-400 my-2'>[SYSTEM] Memeriksa kelengkapan konfigurasi...</div>");
+        // Client Terminal Core Engine
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">user@client:~$</span> ${cmd}`);
+            clientCmdInput.value = '';
+            processClientCommand(cmd);
+        }
+
+        function printToClientTerminal(html) {
+            clientTerminalOutput.innerHTML += `<div>${html}</div>`;
+            clientTerminalOutput.scrollTop = clientTerminalOutput.scrollHeight;
+        }
+
+        function processClientCommand(cmd) {
+            const args = cmd.split(' ').filter(a => a.length > 0);
+            const baseCmd = args[0];
+            const target = args[1];
+
+            if (baseCmd === 'clear') {
+                clientTerminalOutput.innerHTML = '';
+                return;
+            }
 
             const namedConf = fileSystem["/etc/bind/named.conf.local"] || "";
             const dbSmk = fileSystem["/etc/bind/db.smk"] || "";
             const db192 = fileSystem["/etc/bind/db.192"] || "";
 
-            let checks = [];
-            let isAllOk = true;
+            const isServerUp = state.bindInstalled && state.bindRestarted;
+            const hasForwardZone = namedConf.includes("smk.net");
+            const hasReverseZone = namedConf.includes("10.168.192.in-addr.arpa");
 
-            // 1. Cek Paket
-            if (bindInstalled) checks.push("<span class='text-green-400'>✔ [PASSED] Paket BIND9 terinstal.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] Paket BIND9 belum diinstal.</span>"); isAllOk = false; }
+            if (baseCmd === 'nslookup') {
+                if (!target) {
+                    printToClientTerminal("Usage: nslookup <domain-or-ip>");
+                    return;
+                }
 
-            // 2. Cek named.conf.local
-            const hasSmkZone = namedConf.includes('zone "smk.net"') || namedConf.includes("zone 'smk.net'");
-            const hasReverseZone = namedConf.includes('10.168.192.in-addr.arpa');
-            if (hasSmkZone && hasReverseZone) checks.push("<span class='text-green-400'>✔ [PASSED] File named.conf.local valid.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] /etc/bind/named.conf.local belum lengkap.</span>"); isAllOk = false; }
+                if (!isServerUp) {
+                    printToClientTerminal(";; connection timed out; no servers could be reached");
+                    return;
+                }
 
-            // 3. Cek db.smk
-            const hasIpInSmk = dbSmk.includes('192.168.10.1');
-            if (dbSmkCopied && hasIpInSmk) checks.push("<span class='text-green-400'>✔ [PASSED] File Forward /etc/bind/db.smk valid.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] /etc/bind/db.smk belum terisi IP 192.168.10.1.</span>"); isAllOk = false; }
+                if (target === 'smk.net' || target === 'www.smk.net') {
+                    if (hasForwardZone) {
+                        const ip = dbSmk.includes("192.168.10.1") ? "192.168.10.1" : (dbSmk.includes("127.0.0.1") ? "127.0.0.1" : "192.168.10.1");
+                        printToClientTerminal(`Server:\t\t192.168.10.1\nAddress:\t192.168.10.1#53\n\nName:\t${target}\nAddress: ${ip}`);
+                    } else {
+                        printToClientTerminal(`Server:\t\t192.168.10.1\nAddress:\t192.168.10.1#53\n\n** server can't find ${target}: SERVFAIL`);
+                    }
+                } else if (target === '192.168.10.1') {
+                    if (hasReverseZone && db192.includes("smk.net")) {
+                        printToClientTerminal(`Server:\t\t192.168.10.1\nAddress:\t192.168.10.1#53\n\n1.10.168.192.in-addr.arpa\tname = smk.net.`);
+                    } else {
+                        printToClientTerminal(`Server:\t\t192.168.10.1\nAddress:\t192.168.10.1#53\n\n** server can't find 1.10.168.192.in-addr.arpa: NXDOMAIN`);
+                    }
+                } else {
+                    printToClientTerminal(`Server:\t\t192.168.10.1\nAddress:\t192.168.10.1#53\n\n** server can't find ${target}: NXDOMAIN`);
+                }
+            } else if (baseCmd === 'dig') {
+                if (!target) {
+                    printToClientTerminal("Usage: dig <domain-or-ip>");
+                    return;
+                }
 
-            // 4. Cek db.192
-            const hasPtrIn192 = db192.includes('PTR') || db192.toLowerCase().includes('smk.net');
-            if (db192Copied && hasPtrIn192) checks.push("<span class='text-green-400'>✔ [PASSED] File Reverse /etc/bind/db.192 valid.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] /etc/bind/db.192 belum dikonfigurasi.</span>"); isAllOk = false; }
+                if (!isServerUp) {
+                    printToClientTerminal(";; connection timed out; no servers could be reached");
+                    return;
+                }
 
-            // 5. Cek Restart
-            if (bindRestarted) checks.push("<span class='text-green-400'>✔ [PASSED] Service BIND9 telah di-restart.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] BIND9 belum di-restart.</span>"); isAllOk = false; }
-
-            checks.forEach(c => printToTerminal(c));
-
-            if (isAllOk) {
-                const randomHex = Math.floor(Math.random() * 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
-                const token = `SUCCESS-${randomHex}-BIND9`;
-                
-                printToTerminal(`
-<div class='mt-3 mb-2 p-4 border-l-4 border-green-500 bg-green-900/20 rounded-r text-green-100'>
-    <div class='font-bold text-green-400 text-lg flex items-center gap-2'><i class='fa-solid fa-circle-check'></i> VERIFIKASI TUNTAS!</div>
-    <div class='mt-3 pt-3 border-t border-green-800/50'>
-        <span class='text-xs text-slate-300 block uppercase tracking-widest'>TOKEN KELULUSAN ANDA:</span>
-        <span class='text-2xl font-mono font-bold text-yellow-400 tracking-wider block my-2 select-all'>${token}</span>
-        <span class='text-[11px] text-slate-400 italic'>* Salin dan kirimkan token ini ke Instruktur.</span>
-    </div>
-</div>`);
+                if (target === 'smk.net' && hasForwardZone) {
+                    const ip = dbSmk.includes("192.168.10.1") ? "192.168.10.1" : "127.0.0.1";
+                    printToClientTerminal(`; <<>> DiG 9.18.16-1-Debian <<>> smk.net\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41205\n;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1\n\n;; QUESTION SECTION:\n;smk.net.\t\t\tIN\tA\n\n;; ANSWER SECTION:\nsmk.net.\t\t604800\tIN\tA\t${ip}\n\n;; Query time: 1 msec\n;; SERVER: 192.168.10.1#53(192.168.10.1) (UDP)\n;; WHEN: Fri Sep 04 04:36:00 WIB 2026\n;; MSG SIZE  rcvd: 56`);
+                } else {
+                    printToClientTerminal(`; <<>> DiG 9.18.16-1-Debian <<>> ${target}\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 18293\n;; Query time: 2 msec\n;; SERVER: 192.168.10.1#53(192.168.10.1) (UDP)`);
+                }
+            } else if (baseCmd === 'ping') {
+                if (!target) {
+                    printToClientTerminal("ping: usage error: Destination address required");
+                    return;
+                }
+                const resolvedIp = target.includes('smk.net') ? '192.168.10.1' : target;
+                printToClientTerminal(`PING ${target} (${resolvedIp}) 56(84) bytes of data.\n64 bytes from ${resolvedIp}: icmp_seq=1 ttl=64 time=0.342 ms\n64 bytes from ${resolvedIp}: icmp_seq=2 ttl=64 time=0.281 ms\n64 bytes from ${resolvedIp}: icmp_seq=3 ttl=64 time=0.305 ms\n\n--- ${target} ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, time 2048ms`);
             } else {
-                printToTerminal(`
-<div class='mt-3 mb-2 p-3 border-l-4 border-red-500 bg-red-900/20 rounded-r text-red-200 text-sm'>
-    <span class='font-bold text-red-400 block mb-1'><i class='fa-solid fa-triangle-exclamation mr-1'></i>VERIFIKASI BELUM LENGKAP</span>
-    Perbaiki poin <span class='text-red-400 font-bold'>[FAILED]</span> di atas, lalu jalankan <code class='text-yellow-300 bg-black px-1 rounded'>submit-lab</code> kembali.
-</div>`);
+                printToClientTerminal(`bash: ${baseCmd}: command not found`);
             }
         }
 
-        function simulateLoading(lines, callback = null) {
-            let i = 0;
-            function nextLine() {
-                if(i < lines.length) {
-                    printToTerminal(lines[i]);
-                    i++;
-                    setTimeout(nextLine, 100);
-                } else if(callback) callback();
-            }
-            nextLine();
-        }
-
-        // --- NANO EDITOR ---
+        // Nano Editor
         function openNano(file) {
-            isNanoOpen = true;
-            currentFile = file;
+            isNanoOpen = true; currentFile = file;
             nanoTitle.textContent = `File: ${file}`;
-            
-            if(fileSystem[file] === undefined) {
-                fileSystem[file] = "";
-            }
-            
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
             nanoTextarea.value = fileSystem[file];
             nanoEditor.style.display = 'flex';
         }
 
         function saveAndExitNano() {
             fileSystem[currentFile] = nanoTextarea.value;
-            printToTerminal(`<span class="text-slate-400">[ Saved file ${currentFile} ]</span>`);
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
             closeNano();
         }
 
         function closeNano() {
-            isNanoOpen = false;
-            nanoEditor.style.display = 'none';
-            cmdInput.focus();
+            isNanoOpen = false; nanoEditor.style.display = 'none'; cmdInput.focus();
         }
         
-        function resetLab() {
-            if(confirm("Apakah Anda yakin ingin me-reset lab ini ke kondisi awal?")) {
-                location.reload();
+        function resetLab() { if(confirm("Reset Lab?")) location.reload(); }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            const namedConf = fileSystem["/etc/bind/named.conf.local"] || "";
+            const dbSmk = fileSystem["/etc/bind/db.smk"] || "";
+            const db192 = fileSystem["/etc/bind/db.192"] || "";
+            
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.bindInstalled, text: "Paket BIND9 Terinstal" },
+                { cond: namedConf.includes("smk.net"), text: "Konfigurasi Forward Zone (named.conf.local)" },
+                { cond: namedConf.includes("10.168.192.in-addr.arpa"), text: "Konfigurasi Reverse Zone (named.conf.local)" },
+                { cond: state.dbSmkCopied, text: "File db.smk Tersedia" },
+                { cond: state.db192Copied, text: "File db.192 Tersedia" }, 
+                { cond: dbSmk.includes("192.168.10.1"), text: "Record A diubah di db.smk" }, 
+                { cond: db192.includes("smk.net"), text: "Record PTR diubah di db.192" }, 
+                { cond: state.bindRestarted, text: "Service BIND9 Direstart" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase">Token Bukti:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-BIND9</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Gagal</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Silakan lengkapi langkah yang bertanda silang merah dan ulangi verifikasi.</p>`;
             }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
         }
 
-        // Auto focus input click in terminal area
-        document.getElementById('terminalOutput').addEventListener('click', () => {
-            if(!isNanoOpen) cmdInput.focus();
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
         });
     </script>
 </body>
