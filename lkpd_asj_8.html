@@ -2,202 +2,522 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro File Server Simulator (Apache2) - Mobile & Compact Nano</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro Apache Web Server Simulator</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #0f172a;
             touch-action: manipulation;
         }
-        .font-linux { 
-            font-family: 'Ubuntu Mono', monospace; 
-        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
         
-        /* Custom Scrollbar */
-        .terminal-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #000; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-        /* Hide Scrollbar for Quick Buttons */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Nano Editor Overlay */
+        #resizer { cursor: col-resize; }
+        
         #nanoEditor {
             display: none;
             position: absolute;
-            top: 0; left: 0; bottom: 0;
-            width: 100%;
-            background-color: #000;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
             z-index: 30;
             flex-direction: column;
-            border-right: 2px solid #334155;
-            box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.5);
-        }
-
-        @media (min-width: 640px) {
-            #nanoEditor {
-                width: 60%;
-                max-width: 620px;
-            }
         }
     </style>
 </head>
-<body class="text-slate-300 antialiased h-screen flex flex-col overflow-hidden selection:bg-slate-700 selection:text-white">
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
 
-    <header class="bg-slate-900 border-b border-slate-800 text-slate-400 py-2 px-3 flex justify-between items-center shadow-lg z-10 shrink-0">
-        <div class="flex items-center gap-2">
-            <i class="fa-brands fa-linux text-xl text-slate-200"></i>
-            <div>
-                <h1 class="text-xs sm:text-sm font-bold text-slate-200 tracking-wide">Linux SysAdmin Lab</h1>
-                <p class="text-[9px] sm:text-[10px] font-mono text-emerald-400">Web Server (Apache2)</p>
-            </div>
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-server text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Apache Web Server</span>
         </div>
-        <div class="flex gap-1.5">
-            <button onclick="showGuide()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded border border-slate-700 flex items-center gap-1">
-                <i class="fa-solid fa-book text-emerald-400"></i> <span>Panduan</span>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
             </button>
-            <button onclick="resetLab()" class="text-xs bg-red-900/40 hover:bg-red-800/80 text-red-200 px-2.5 py-1.5 rounded border border-red-900/50 flex items-center gap-1">
-                <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Reset</span>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
             </button>
         </div>
     </header>
 
-    <main class="flex-grow flex relative bg-black overflow-hidden">
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal & Browser
+        </button>
+    </div>
+
+    <!-- Main Workspace (Split Screen di PC, Tabbed di HP) -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
         
-        <div class="w-full h-full p-1.5 sm:p-2 flex flex-col">
-            <div class="w-full h-full bg-[#0c0c0c] rounded-md shadow-2xl relative border border-slate-800 overflow-hidden flex flex-col">
-                
-                <div id="terminalOutput" class="flex-grow p-3 overflow-y-auto terminal-scroll font-linux text-sm sm:text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap">
-<div class="text-slate-500 text-xs">Linux web-server 6.1.0-11-amd64 Debian 12</div>
-<div class="text-emerald-400/90 mt-1 text-xs sm:text-sm">Gunakan panduan (buku hijau) dan selesaikan konfigurasi Apache2. Ketik <span class="text-yellow-300 font-bold">submit-lab</span> untuk verifikasi akhir.</div><br></div>
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[38%] md:min-w-[280px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
 
-                <div class="bg-slate-900/90 border-t border-slate-800 p-1.5 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-                    <span class="text-[10px] text-slate-500 self-center font-mono px-1 shrink-0"><i class="fa-solid fa-bolt"></i> Cepat:</span>
-                    <button onclick="quickCmd('sudo apt update')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">apt update</button>
-                    <button onclick="quickCmd('sudo apt install apache2 -y')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">install apache2</button>
-                    <button onclick="quickCmd('sudo nano /var/www/html/index.html')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">nano index.html</button>
-                    <button onclick="quickCmd('sudo ufw allow 80/tcp')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">ufw allow 80</button>
-                    <button onclick="quickCmd('sudo systemctl restart apache2')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">restart apache2</button>
-                    <button onclick="quickCmd('curl http://localhost')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 whitespace-nowrap shrink-0">curl web</button>
-                    <button onclick="quickCmd('submit-lab')" class="text-xs bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-2.5 py-1 rounded border border-emerald-700/80 font-bold whitespace-nowrap shrink-0">submit-lab</button>
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memahami instalasi Apache Web Server di sistem operasi Linux.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengubah halaman web default di direktori <code>/var/www/html/index.html</code>.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengonfigurasi UFW Firewall untuk mengizinkan lalu lintas web pada Port 80 (HTTP).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Melakukan pengujian koneksi lokal (curl) dan pengujian dari Client Browser.</li>
+                    </ul>
                 </div>
 
-                <form onsubmit="handleFormSubmit(event)" class="p-2 bg-black border-t border-slate-800 flex items-center gap-2 shrink-0">
-                    <span class="text-green-500 font-bold font-linux text-xs sm:text-sm shrink-0" id="promptText">root@debian:~#</span>
-                    <input type="text" id="cmdInput" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Ketik perintah di sini..." class="flex-grow bg-transparent text-slate-200 font-linux text-sm focus:outline-none">
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-xs font-bold shrink-0 flex items-center gap-1">
-                        <span>Kirim</span> <i class="fa-solid fa-paper-plane text-[10px]"></i>
-                    </button>
-                </form>
-                
-                <div id="nanoEditor" class="font-linux text-sm">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Instruksi Langkah Demi Langkah</h2>
+                    <ol class="space-y-5 text-sm text-slate-600 pl-1">
+                        
+                        <!-- Langkah 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 1: Instalasi Paket Apache2</span>
+                            <p class="text-xs text-slate-500 mb-2">Perbarui indeks paket repositori server, lalu install paket apache2.</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install apache2 -y</code>
+                                <button onclick="copyCmd('sudo apt install apache2 -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 my-1 font-semibold">Verifikasi:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">sudo systemctl status apache2</code>
+                                <button onclick="copyCmd('sudo systemctl status apache2')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">Jalankan perintah di atas untuk memastikan service web server sudah aktif (active/running).</p>
+                        </li>
+                        
+                        <!-- Langkah 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 2: Mengubah Halaman Web Default</span>
+                            <p class="text-xs text-slate-500 mb-2">Secara default, Apache2 menyimpan file halaman utama pada direktori <code>/var/www/html/index.html</code>. Buka file tersebut dengan text editor nano:</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /var/www/html/index.html</code>
+                                <button onclick="copyCmd('sudo nano /var/www/html/index.html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-600 mb-1.5 font-semibold">Hapus atau ganti isi file tersebut dengan kode HTML sederhana berikut (atau tulisan sesuai instruksi):</p>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto mb-2">&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;
+    &lt;title&gt;Web Server Apache&lt;/title&gt;&lt;/head&gt;&lt;body&gt;
+    &lt;h1&gt;Halo Dunia!&lt;/h1&gt;
+    &lt;p&gt;Selamat, Apache Web Server berhasil dikonfigurasi.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</pre>
+                            <p class="text-xs text-slate-500 italic">Tekan <strong>Ctrl + O</strong>, lalu <strong>Enter</strong> untuk menyimpan, dan <strong>Ctrl + X</strong> untuk keluar.</p>
+                        </li>
+
+                        <!-- Langkah 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 3: Konfigurasi Firewall (UFW)</span>
+                            <p class="text-xs text-slate-500 mb-2">Izinkan lalu lintas data web pada Port 80 (HTTP) agar halaman web dapat diakses oleh komputer di luar server.</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo ufw allow 80/tcp</code>
+                                <button onclick="copyCmd('sudo ufw allow 80/tcp')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded"><strong>Catatan:</strong> Kamu juga bisa menggunakan perintah profil dari UFW: <code>sudo ufw allow 'Apache'</code>.</p>
+                        </li>
+
+                        <!-- Langkah 4 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 4: Restart Service & Uji Coba Lokal</span>
+                            <p class="text-xs text-slate-500 mb-2">Muat ulang service Apache2 agar semua perubahan diterapkan, lalu lakukan pengujian pertama di dalam server menggunakan tool curl.</p>
+                            
+                            <div class="space-y-1.5 mb-2">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl restart apache2</code>
+                                    <button onclick="copyCmd('sudo systemctl restart apache2')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">curl http://localhost</code>
+                                    <button onclick="copyCmd('curl http://localhost')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500"><strong>Hasil yang Diharapkan:</strong> Terminal akan menampilkan struktur file HTML atau teks "Halo Dunia!" yang sebelumnya sudah diisikan pada file index.html.</p>
+                        </li>
+
+                        <!-- Pengujian -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-2">4. PENGUJIAN KONEKSI (TESTING)</span>
+                            
+                            <div class="bg-slate-50 border border-slate-200 p-3 rounded-md text-xs space-y-2 text-slate-700">
+                                <p class="font-bold text-slate-900"><i class="fa-solid fa-globe text-blue-500 mr-1"></i> A. Pengujian dari Browser Client</p>
+                                <ol class="list-decimal list-inside pl-1 space-y-1.5 text-slate-600">
+                                    <li>Buka aplikasi Web Browser (Google Chrome, Firefox, atau Edge) pada PC Client (Tab Client simulator di sebelah kanan).</li>
+                                    <li>Masukkan alamat IP Server pada kolom URL / address bar:
+                                        <div class="my-1 font-mono text-[11px] bg-slate-200 p-1 rounded text-slate-800">http://IP_Server_Kamu</div>
+                                        <span class="text-[11px] text-slate-500">(Contoh: <code>http://192.168.1.100</code>)</span>
+                                    </li>
+                                    <li>Tekan <strong>Enter</strong>.</li>
+                                </ol>
+                                <p class="text-xs text-slate-700 pt-1 border-t border-slate-200 mt-2"><strong>Hasil yang Diharapkan:</strong> Tampil halaman web dengan tulisan "Halo Dunia!".</p>
+                            </div>
+                        </li>
+
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Jaringan Apache Web Server</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm">Apache Web Server</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.100</code>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Port 80 (HTTP)</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Switch / Network</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[220px]">
+                        <i class="fa-solid fa-desktop text-4xl text-green-500 mb-2"></i>
+                        <span class="font-bold text-sm">Client PC (Browser)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.50</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Install Paket Apache2</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_html" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Ubah Halaman Web Default (/var/www/html/index.html)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ufw" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi UFW Firewall (allow 80/tcp / 'Apache')</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_restart" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Restart Service Apache2</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_curl" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Pengujian Lokal Server (curl http://localhost) & Client Browser</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer (Hanya Tampil di Tablet/Desktop) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal & Browser Simulator -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal / Browser Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@apache-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-green-400"></i> Client PC Browser
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux apache-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Fri, 04 Sep 2026 21:20:00 WIB from 192.168.1.50</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@apache-server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
                     <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
-                        <span class="font-bold text-xs">GNU nano 5.09</span>
-                        <span id="nanoTitle" class="text-xs truncate max-w-[160px]">File: ...</span>
-                        <div></div>
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /var/www/html/index.html</span>
+                        <div class="w-20"></div>
                     </div>
-                    
-                    <div class="bg-slate-900 border-b border-slate-800 p-1.5 flex gap-2 shrink-0">
-                        <button type="button" onclick="saveAndExitNano()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-1 px-2 rounded text-xs font-bold flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-floppy-disk"></i> Simpan & Keluar
-                        </button>
-                        <button type="button" onclick="closeNano()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1 px-3 rounded text-xs font-bold">
-                            Batal
-                        </button>
-                    </div>
-
-                    <textarea id="nanoTextarea" class="flex-grow bg-black text-slate-200 p-2 outline-none resize-none font-linux text-xs sm:text-sm leading-relaxed" spellcheck="false"></textarea>
-                    
-                    <div class="bg-slate-900 text-slate-400 px-2 py-1 text-[11px] border-t border-slate-800 shrink-0">
-                        <span id="nanoMessage">Tips: Ubah tulisan HTML untuk membuat halaman web versimu sendiri.</span>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Terminal / Browser Workspace: Client Simulator -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-slate-900">
+                <!-- Browser Header Simulator -->
+                <div class="bg-slate-800 p-2 border-b border-slate-700 flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 px-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                    </div>
+                    <form onsubmit="handleBrowserNavigate(event)" class="flex-1 flex items-center bg-slate-900 rounded border border-slate-700 px-3 py-1">
+                        <i class="fa-solid fa-lock text-xs text-slate-500 mr-2"></i>
+                        <input type="text" id="browserUrl" value="http://192.168.1.100" class="w-full bg-transparent text-xs text-slate-200 font-mono outline-none">
+                        <button type="submit" class="text-xs text-indigo-400 hover:text-indigo-300 ml-2 font-bold">GO</button>
+                    </form>
+                </div>
+
+                <!-- Browser Body Render Display -->
+                <div id="browserDisplay" class="flex-grow bg-white p-6 overflow-y-auto text-slate-800">
+                    <div class="text-center text-slate-400 my-10">
+                        <i class="fa-solid fa-globe text-5xl mb-3"></i>
+                        <p class="text-sm font-semibold">Masukkan URL <code>http://192.168.1.100</code> di atas lalu tekan Enter untuk menguji koneksi Web Server.</p>
+                    </div>
+                </div>
+
+                <!-- Optional Terminal Client Prompt -->
+                <div class="border-t border-slate-800 bg-[#1e293b] p-3 shrink-0">
+                    <div id="clientTerminalOutput" class="font-linux text-xs text-slate-400 mb-2 max-h-24 overflow-y-auto custom-scroll">
+                        💡 <i>Ketik <code>curl http://192.168.1.100</code> di bawah ini atau tekan tombol GO pada address bar browser di atas.</i>
+                    </div>
+                    <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#3b82f6] font-bold font-linux text-xs shrink-0">siswa@client-pc:~$</span>
+                        <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-xs focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Lab Apache Server</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
             </div>
         </div>
-
-        <div id="guidePanel" class="hidden absolute right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 bg-slate-900 border-l border-slate-700 shadow-2xl flex flex-col z-50">
-            <div class="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-800">
-                <h3 class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-globe text-emerald-500 mr-2"></i>Panduan Web Server</h3>
-                <button onclick="showGuide()" class="text-slate-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div class="p-4 overflow-y-auto flex-grow text-xs sm:text-sm space-y-4 text-slate-300">
-                <div>
-                    <h4 class="font-bold text-emerald-400">1. Instalasi Apache2</h4>
-                    <code onclick="quickCmd('sudo apt update')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt update</code>
-                    <code onclick="quickCmd('sudo apt install apache2 -y')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo apt install apache2 -y</code>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">2. Ubah Halaman Web Default</h4>
-                    <code onclick="quickCmd('sudo nano /var/www/html/index.html')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo nano /var/www/html/index.html</code>
-                    <p class="text-[11px] mt-1 text-slate-400">Ubah tulisan "It works!" di dalam editor nano dengan teks apa saja (contoh: "Halo Dunia!"). Simpan jika sudah.</p>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">3. Konfigurasi Firewall (UFW)</h4>
-                    <p class="text-[11px] mb-1 text-slate-400">Izinkan lalu lintas HTTP (Port 80) melewati firewall.</p>
-                    <code onclick="quickCmd('sudo ufw allow 80/tcp')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo ufw allow 80/tcp</code>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400">4. Restart & Uji Coba</h4>
-                    <code onclick="quickCmd('sudo systemctl restart apache2')" class="block bg-black p-2 mt-1 rounded text-xs cursor-pointer">sudo systemctl restart apache2</code>
-                    <code onclick="quickCmd('curl http://localhost')" class="block bg-black p-2 mt-2 rounded text-xs cursor-pointer">curl http://localhost</code>
-                </div>
-                <div class="border-t border-slate-700 pt-3">
-                    <h4 class="font-bold text-yellow-400">5. Verifikasi Akhir</h4>
-                    <code onclick="quickCmd('submit-lab')" class="block bg-black p-2 mt-1 rounded text-xs text-yellow-300 font-bold cursor-pointer">submit-lab</code>
-                </div>
-            </div>
-        </div>
-    </main>
+    </div>
 
     <script>
+        // DOM Elements
         const terminalOutput = document.getElementById('terminalOutput');
         const cmdInput = document.getElementById('cmdInput');
+        const clientTerminalOutput = document.getElementById('clientTerminalOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
+        const browserUrl = document.getElementById('browserUrl');
+        const browserDisplay = document.getElementById('browserDisplay');
         const nanoEditor = document.getElementById('nanoEditor');
         const nanoTextarea = document.getElementById('nanoTextarea');
         const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
         
-        let currentDir = "~";
         let isNanoOpen = false;
         let currentFile = "";
-        
-        const DEFAULT_HTML = "<!DOCTYPE html>\n<html>\n<head>\n  <title>Debian Default Page</title>\n</head>\n<body>\n  <h1>It works!</h1>\n  <p>This is the default web page for this server.</p>\n</body>\n</html>\n";
+        let fontSizeClass = "text-[15px]";
 
-        // Virtual File System
+        // Default file Apache index.html
+        const defaultIndexHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Apache2 Debian Default Page</title>
+</head>
+<body>
+    <h1>It works!</h1>
+    <p>This is the default web page for this server.</p>
+</body>
+</html>`;
+
+        // Virtual File System & State
         const fileSystem = {
-            "/var/www/html/index.html": DEFAULT_HTML
+            "/var/www/html/index.html": defaultIndexHtml
         };
 
-        // State sistem Apache2
-        let apacheInstalled = false;
-        let ufwApacheOpen = false;
-        let apacheRestarted = false;
+        let state = { 
+            apacheInstalled: false, 
+            indexHtmlUpdated: false, 
+            ufwApache: false, 
+            apacheRestarted: false,
+            curlTested: false
+        };
 
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const command = cmdInput.value.trim();
-            if(!command) return;
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
 
-            printToTerminal(`<span class="text-green-500 font-bold">root@debian:${currentDir}#</span> ${command}`);
-            cmdInput.value = '';
-            processCommand(command);
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                
+                setTimeout(() => {
+                    const isServerActive = !document.getElementById('terminal-workspace-server').classList.contains('hidden');
+                    if (isServerActive) {
+                        document.getElementById('cmdInput').focus();
+                    } else {
+                        document.getElementById('clientCmdInput').focus();
+                    }
+                }, 100);
+            }
         }
 
-        function quickCmd(text) {
-            cmdInput.value = text;
-            printToTerminal(`<span class="text-green-500 font-bold">root@debian:${currentDir}#</span> ${text}`);
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        // Copy Command Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            document.getElementById('task1').checked = state.apacheInstalled;
+            
+            // Check HTML Content
+            const htmlContent = fileSystem["/var/www/html/index.html"] || "";
+            const isHtmlChanged = htmlContent.includes("Halo Dunia") || htmlContent.includes("Selamat, Apache Web Server berhasil dikonfigurasi");
+            state.indexHtmlUpdated = isHtmlChanged;
+            
+            document.getElementById('task_html').checked = state.indexHtmlUpdated;
+            document.getElementById('task_ufw').checked = state.ufwApache;
+            document.getElementById('task_restart').checked = state.apacheRestarted;
+            document.getElementById('task_curl').checked = state.curlTested;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@apache-server:~#</span> ${cmd}`);
             cmdInput.value = '';
-            processCommand(text);
+            processCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
         }
 
         function printToTerminal(html) {
@@ -205,175 +525,197 @@
             terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
 
-        function processCommand(rawCmd) {
-            if (!rawCmd) return;
-            const cmd = rawCmd.replace(/^sudo\s+/, '').trim();
-            const args = cmd.split(/\s+/);
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
             const baseCmd = args[0];
 
-            if(cmd === 'apt update') {
-                simulateLoading([
-                    "Hit:1 http://deb.debian.org/debian bookworm InRelease",
-                    "Reading package lists... Done",
-                    "All packages are up to date."
-                ]);
+            if(cleanCmd === 'apt update') { 
+                printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); 
             } 
-            else if(cmd === 'apt install apache2 -y' || cmd === 'apt-get install apache2 -y') {
-                simulateLoading([
-                    "Reading package lists... Done",
-                    "Unpacking apache2 (2.4.57-2) ...",
-                    "Setting up apache2 (2.4.57-2) ...",
-                    "Enabling site 000-default.",
-                    "Created symlink /etc/systemd/system/multi-user.target.wants/apache2.service."
-                ], () => { apacheInstalled = true; });
+            else if(cleanCmd.includes('apt install apache2')) { 
+                state.apacheInstalled = true; 
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed: apache2 apache2-data apache2-utils\nSetting up apache2 (2.4.57-2)..."); 
+                updateTasks(); 
             }
-            else if(baseCmd === 'nano') {
-                const file = args[1];
-                if(file) openNano(file);
-                else printToTerminal("nano: please specify a file to edit");
+            else if(cleanCmd === 'systemctl status apache2') {
+                const statusStr = state.apacheInstalled ? 
+                    "<span class='text-green-400'>● apache2.service - The Apache HTTP Server\n   Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)\n   Active: active (running) since Fri 2026-09-04 21:20:10 WIB; 5min ago</span>" :
+                    "Unit apache2.service could not be found.";
+                printToTerminal(statusStr);
             }
-            else if(baseCmd === 'ufw') {
-                if(cmd.includes('allow 80') || cmd.includes('allow http') || cmd.includes('allow \'WWW\'') || cmd.includes('allow WWW')) {
-                    ufwApacheOpen = true;
-                    printToTerminal("Rule added\nRule added (v6)");
-                } else if(cmd.includes('reload')) {
-                    printToTerminal("Firewall reloaded");
+            else if(baseCmd === 'nano') { 
+                if(args[1]) openNano(args[1]); 
+            }
+            else if(cleanCmd.includes('ufw allow 80/tcp') || cleanCmd.includes("ufw allow 'Apache'") || cleanCmd.includes("ufw allow 80")) { 
+                state.ufwApache = true; 
+                printToTerminal("Rules updated\nRules updated (v6)"); 
+                updateTasks(); 
+            }
+            else if(cleanCmd.includes('systemctl restart apache2')) { 
+                state.apacheRestarted = true; 
+                printToTerminal("<span class='text-green-400'>[ OK ] Restarted apache2 (The Apache HTTP Server)</span>"); 
+                updateTasks(); 
+            }
+            else if(cleanCmd.startsWith('curl')) {
+                if(!state.apacheInstalled || !state.apacheRestarted) {
+                    printToTerminal("<span class='text-red-400'>curl: (7) Failed to connect to localhost port 80: Connection refused</span>");
                 } else {
-                    printToTerminal("Usage: ufw allow <port>");
+                    const content = fileSystem["/var/www/html/index.html"] || "";
+                    printToTerminal(escapeHtml(content));
+                    state.curlTested = true;
+                    updateTasks();
                 }
             }
-            else if(cmd === 'systemctl restart apache2' || cmd === 'service apache2 restart') {
-                if(!apacheInstalled) printToTerminal("Failed to restart apache2.service: Unit apache2.service not found.");
-                else {
-                    apacheRestarted = true;
-                    printToTerminal("<span class='text-emerald-400'>[ OK ] Restarted The Apache HTTP Server.</span>");
-                }
-            }
-            else if(baseCmd === 'curl') {
-                if(args[1] === 'http://localhost' || args[1] === 'localhost' || args[1] === '127.0.0.1') {
-                    if(!apacheInstalled) {
-                        printToTerminal("curl: (7) Failed to connect to localhost port 80: Connection refused");
-                    } else {
-                        // Tampilkan isi index.html, escape tag HTML agar muncul sebagai text di terminal
-                        let content = fileSystem["/var/www/html/index.html"] || "";
-                        content = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                        printToTerminal(`<div class="text-slate-400 mt-1">${content}</div>`);
-                    }
-                } else {
-                    printToTerminal("curl: try 'curl http://localhost'");
-                }
-            }
-            else if(cmd === 'submit-lab') {
-                verifySubmission();
-            }
-            else if(cmd === 'clear') {
-                terminalOutput.innerHTML = '';
-            }
-            else {
-                printToTerminal(`bash: ${baseCmd}: command not found`);
+            else if(cmd === 'submit-lab') { verifySubmission(); }
+            else if(cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${args[0]}: command not found`); }
+            
+            if(!isNanoOpen) cmdInput.focus();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Client Browser & Terminal Simulator Core
+        function handleBrowserNavigate(e) {
+            if(e) e.preventDefault();
+            const url = browserUrl.value.trim();
+            renderWebPage(url);
+        }
+
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">siswa@client-pc:~$</span> ${cmd}`);
+            clientCmdInput.value = '';
+
+            if (cmd.startsWith('curl')) {
+                const parts = cmd.split(' ');
+                const targetUrl = parts[1] || 'http://192.168.1.100';
+                browserUrl.value = targetUrl;
+                renderWebPage(targetUrl, true);
+            } else {
+                printToClientTerminal(`Command '${cmd}' not found. Gunakan perintah: <code>curl http://192.168.1.100</code>`);
             }
         }
 
-        // --- VERIFIKASI PRAKTIKUM (SUBMIT-LAB) ---
-        function verifySubmission() {
-            printToTerminal("<div class='text-yellow-400 my-1'>[SYSTEM] Memeriksa kelengkapan konfigurasi Web Server Apache2...</div>");
+        function printToClientTerminal(html) {
+            clientTerminalOutput.innerHTML += `<div>${html}</div>`;
+            clientTerminalOutput.scrollTop = clientTerminalOutput.scrollHeight;
+        }
 
-            const currentHtml = fileSystem["/var/www/html/index.html"] || "";
-            let checks = [];
-            let isAllOk = true;
-
-            // 1. Cek Paket
-            if (apacheInstalled) checks.push("<span class='text-green-400'>✔ [PASSED] Paket apache2 terinstal.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] Paket apache2 belum diinstal.</span>"); isAllOk = false; }
-
-            // 2. Cek Modifikasi Halaman Web
-            if (currentHtml.trim() !== DEFAULT_HTML.trim() && currentHtml.length > 0) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] File index.html berhasil dimodifikasi.</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] Halaman web belum diubah dari bawaan awalnya (Gunakan nano untuk mengedit index.html).</span>");
-                isAllOk = false;
+        function renderWebPage(url, fromTerminal = false) {
+            if(!state.apacheInstalled || !state.apacheRestarted) {
+                browserDisplay.innerHTML = `
+                    <div class="text-center text-red-500 my-10">
+                        <i class="fa-solid fa-triangle-exclamation text-5xl mb-3"></i>
+                        <h3 class="font-bold text-lg">ERR_CONNECTION_REFUSED</h3>
+                        <p class="text-xs text-slate-500 mt-1">Sistem gagal terhubung ke Server Web Apache. Pastikan service apache2 sudah di-restart dan aktif.</p>
+                    </div>`;
+                if(fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (7) Failed to connect to 192.168.1.100 port 80: Connection refused</span>");
+                return;
             }
 
-            // 3. Cek UFW Firewall
-            if (ufwApacheOpen) {
-                checks.push("<span class='text-green-400'>✔ [PASSED] Port HTTP (80) diizinkan melewati firewall.</span>");
-            } else {
-                checks.push("<span class='text-red-400'>✘ [FAILED] Aturan UFW untuk port 80/HTTP belum ditambahkan.</span>");
-                isAllOk = false;
+            if(!state.ufwApache) {
+                browserDisplay.innerHTML = `
+                    <div class="text-center text-amber-600 my-10">
+                        <i class="fa-solid fa-shield-halved text-5xl mb-3"></i>
+                        <h3 class="font-bold text-lg">ERR_CONNECTION_TIMED_OUT</h3>
+                        <p class="text-xs text-slate-500 mt-1">Koneksi diblokir oleh Firewall (UFW) Server. Jalankan <code>sudo ufw allow 80/tcp</code> di server.</p>
+                    </div>`;
+                if(fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (28) Failed to connect to 192.168.1.100 port 80: Connection timed out</span>");
+                return;
             }
 
-            // 4. Cek Restart Service
-            if (apacheRestarted) checks.push("<span class='text-green-400'>✔ [PASSED] Service apache2 telah di-restart.</span>");
-            else { checks.push("<span class='text-red-400'>✘ [FAILED] Service apache2 belum di-restart setelah konfigurasi selesai.</span>"); isAllOk = false; }
+            const htmlContent = fileSystem["/var/www/html/index.html"] || "";
+            browserDisplay.innerHTML = htmlContent;
+            
+            state.curlTested = true;
+            updateTasks();
 
-            checks.forEach(c => printToTerminal(c));
-
-            if (isAllOk) {
-                const randomHex = Math.floor(Math.random() * 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
-                const token = `SUCCESS-${randomHex}-APACHE2`;
-                
-                printToTerminal(`
-<div class='mt-2 mb-2 p-3 border border-emerald-500 bg-emerald-950/60 rounded text-emerald-200'>
-    <div class='font-bold text-emerald-400 text-base'><i class='fa-solid fa-circle-check mr-1'></i>VERIFIKASI TUNTAS!</div>
-    <div class='mt-2 pt-2 border-t border-emerald-800'>
-        <span class='text-[10px] text-slate-300 block uppercase'>TOKEN KELULUSAN WEB SERVER:</span>
-        <span class='text-xl font-mono font-bold text-yellow-300 tracking-wider block my-1 select-all'>${token}</span>
-        <span class='text-[10px] text-slate-400 italic'>* Salin dan kirimkan token ini ke Instruktur.</span>
-    </div>
-</div>`);
-            } else {
-                printToTerminal(`
-<div class='mt-2 mb-2 p-2 border border-red-500/50 bg-red-950/30 rounded text-red-300 text-xs'>
-    <span class='font-bold text-red-400 block'><i class='fa-solid fa-triangle-exclamation mr-1'></i>VERIFIKASI BELUM LENGKAP</span>
-    Perbaiki poin <span class='text-red-400 font-bold'>[FAILED]</span> di atas, lalu jalankan <span class='text-yellow-300 font-bold'>submit-lab</span> kembali.
-</div>`);
+            if(fromTerminal) {
+                printToClientTerminal(`<div class="bg-slate-800 p-2 rounded text-slate-200 mt-1 font-mono">${escapeHtml(htmlContent)}</div>`);
             }
         }
 
-        function simulateLoading(lines, callback = null) {
-            let i = 0;
-            function nextLine() {
-                if(i < lines.length) {
-                    printToTerminal(lines[i]);
-                    i++;
-                    setTimeout(nextLine, 100);
-                } else if(callback) callback();
-            }
-            nextLine();
-        }
-
-        // --- NANO EDITOR ---
+        // Nano Editor
         function openNano(file) {
-            isNanoOpen = true;
+            isNanoOpen = true; 
             currentFile = file;
             nanoTitle.textContent = `File: ${file}`;
-            
-            if(fileSystem[file] === undefined) {
-                fileSystem[file] = "";
-            }
-            
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
             nanoTextarea.value = fileSystem[file];
             nanoEditor.style.display = 'flex';
         }
 
         function saveAndExitNano() {
             fileSystem[currentFile] = nanoTextarea.value;
-            printToTerminal(`<span class="text-slate-400">[ Saved file ${currentFile} ]</span>`);
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
             closeNano();
         }
 
         function closeNano() {
-            isNanoOpen = false;
-            nanoEditor.style.display = 'none';
-        }
-
-        function showGuide() {
-            document.getElementById('guidePanel').classList.toggle('hidden');
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            cmdInput.focus();
         }
         
-        function resetLab() {
-            location.reload();
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Apache Web Server?")) location.reload(); 
         }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            const htmlContent = fileSystem["/var/www/html/index.html"] || "";
+            const isContentUpdated = htmlContent.includes("Halo Dunia") || htmlContent.includes("Selamat, Apache Web Server berhasil dikonfigurasi");
+            
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.apacheInstalled, text: "Paket Apache2 Terinstal" },
+                { cond: isContentUpdated, text: "Halaman Web /var/www/html/index.html Diperbarui ('Halo Dunia!')" },
+                { cond: state.ufwApache, text: "UFW Firewall Allow Port 80 / Apache Diaktifkan" },
+                { cond: state.apacheRestarted, text: "Service Apache2 Direstart (systemctl restart apache2)" },
+                { cond: state.curlTested, text: "Pengujian Akses Web (curl / Browser Client) Berhasil" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-APACHE2</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Silakan lengkapi langkah konfigurasi yang bertanda silang merah, lalu klik Verify Target kembali.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
+        });
     </script>
 </body>
 </html>
