@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Simulator Konfigurasi Network & Active Directory</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&family=Consolas&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        .font-ps { font-family: 'Consolas', 'Courier New', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+        
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
+            z-index: 30;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-network-wired text-indigo-400"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Network & AD DS</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="verifySubmission()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Layar Kecil (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Konsol Terminal
+        </button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[42%] md:min-w-[320px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Konfigurasi IP Static di Ubuntu Server menggunakan Netplan.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Menerapkan & menguji status antarmuka jaringan di Linux.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Konfigurasi Static IP dan DNS di Windows Server via PowerShell.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Instalasi AD DS dan Promosi Server menjadi Domain Controller.</li>
+                    </ul>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- BAGIAN 1: LINUX UBUNTU SERVER -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-brands fa-ubuntu text-orange-500 text-lg"></i>
+                        <h2 class="text-base font-bold text-slate-800">1. Ubuntu Server (Netplan)</h2>
+                    </div>
+                    
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 1: Identifikasi Interface Jaringan</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Periksa nama kartu jaringan aktif (contoh: <code>ens33</code>):</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">ip link show</code>
+                                <button onclick="copyCmd('ip link show')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 2: Konfigurasi IP Static Netplan</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Buka file konfigurasi YAML Netplan:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/netplan/00-installer-config.yaml</code>
+                                <button onclick="copyCmd('sudo nano /etc/netplan/00-installer-config.yaml')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-1">Isikan struktur YAML berikut ke dalam editor:</p>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto mb-2">network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens33:
+      dhcp4: no
+      addresses:
+        - 192.168.10.10/24
+      routes:
+        - to: default
+          via: 192.168.10.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1</pre>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 3: Terapkan Konfigurasi Network</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Uji sintaks YAML dan terapkan perubahan IP:</p>
+                            <div class="space-y-1.5">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo netplan apply</code>
+                                    <button onclick="copyCmd('sudo netplan apply')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">ip a show ens33</code>
+                                    <button onclick="copyCmd('ip a show ens33')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- BAGIAN 2: WINDOWS SERVER -->
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-brands fa-windows text-blue-500 text-lg"></i>
+                        <h2 class="text-base font-bold text-slate-800">2. Windows Server (Active Directory)</h2>
+                    </div>
+                    
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 1: Atur Static IP Address & DNS</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Jalankan perintah PowerShell berikut:</p>
+                            <div class="space-y-1.5">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-[11px] text-slate-700 truncate">New-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress "192.168.10.10" -PrefixLength 24 -DefaultGateway "192.168.10.1"</code>
+                                    <button onclick="copyCmd('New-NetIPAddress -InterfaceAlias &quot;Ethernet&quot; -IPAddress &quot;192.168.10.10&quot; -PrefixLength 24 -DefaultGateway &quot;192.168.10.1&quot;')" class="text-slate-400 hover:text-indigo-600 ml-2"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-[11px] text-slate-700 truncate">Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses ("127.0.0.1", "8.8.8.8")</code>
+                                    <button onclick="copyCmd('Set-DnsClientServerAddress -InterfaceAlias &quot;Ethernet&quot; -ServerAddresses (&quot;127.0.0.1&quot;, &quot;8.8.8.8&quot;)')" class="text-slate-400 hover:text-indigo-600 ml-2"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 2: Install Active Directory Domain Services</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Pasang fitur AD DS beserta tools manajemennya:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools</code>
+                                <button onclick="copyCmd('Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">Langkah 3: Promosi Server Menjadi Domain Controller</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Buat Forest baru (contoh: <code>domainanda.local</code>):</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-[11px] text-slate-700 truncate">Install-ADDSForest -DomainName "domainanda.local" -SafeModeAdministratorPassword (ConvertTo-SecureString "PasswordKuat123!" -AsPlainText -Force) -InstallDns:$true -Force:$true</code>
+                                <button onclick="copyCmd('Install-ADDSForest -DomainName &quot;domainanda.local&quot; -SafeModeAdministratorPassword (ConvertTo-SecureString &quot;PasswordKuat123!&quot; -AsPlainText -Force) -InstallDns:$true -Force:$true')" class="text-slate-400 hover:text-indigo-600 ml-2"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Server Jaringan</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-brands fa-ubuntu text-4xl text-orange-500 mb-2"></i>
+                        <span class="font-bold text-sm">Ubuntu Server (Netplan)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded mt-1">192.168.10.10/24</code>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Interface: ens33</span>
+                    </div>
+
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-network-wired text-2xl text-slate-500 mb-1"></i>
+                        <span class="font-bold text-xs text-slate-600">Gateway Router</span>
+                        <code class="text-[11px] text-slate-500">192.168.10.1</code>
+                    </div>
+
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-brands fa-windows text-4xl text-blue-500 mb-2"></i>
+                        <span class="font-bold text-sm">Windows Server (AD DS)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded mt-1">192.168.10.10/24</code>
+                        <span class="text-[10px] text-slate-400 mt-0.5">Domain: domainanda.local</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Linux Ubuntu Server</div>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_ip_link" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Identifikasi Antarmuka Jaringan (ip link)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_netplan_yaml" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi File YAML Netplan (/etc/netplan/00-installer-config.yaml)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_netplan_apply" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Terapkan Konfigurasi IP (sudo netplan apply)</span>
+                    </label>
+
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Windows Server</div>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_win_ip" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi Static IP & DNS via PowerShell</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_win_adds" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Instalasi Active Directory Domain Services</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <input type="checkbox" id="task_win_forest" class="w-5 h-5 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-sm font-medium text-slate-700">Promosi Server Menjadi Domain Controller (domainanda.local)</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Terminals Container -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[320px] h-full">
+            
+            <!-- Terminal Switcher Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('ubuntu')" id="term-tab-ubuntu" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-brands fa-ubuntu text-orange-400"></i> root@ubuntu-server
+                </button>
+                <button onclick="switchTerminalTab('windows')" id="term-tab-windows" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-brands fa-windows text-blue-400"></i> Windows PowerShell
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Ubuntu Server -->
+            <div id="terminal-workspace-ubuntu" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="ubuntuTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-88-generic x86_64)</div>
+                    <div class="text-slate-500 mt-1 mb-4">System information as of Mon 07 Sep 2026 14:00:00 WIB</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleUbuntuSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@ubuntu-server:~#</span>
+                        <input type="text" id="ubuntuCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /etc/netplan/00-installer-config.yaml</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan File (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Workspace: Windows Server (PowerShell) -->
+            <div id="terminal-workspace-windows" class="flex-1 flex flex-col relative overflow-hidden hidden bg-[#012456]">
+                <div id="winTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-ps text-[14px] leading-relaxed text-slate-100 whitespace-pre-wrap pb-12">
+                    <div class="text-white font-bold">Windows PowerShell</div>
+                    <div class="text-slate-300 mt-0.5 mb-4">Copyright (C) Microsoft Corporation. All rights reserved.</div>
+                </div>
+
+                <div class="p-3 bg-[#011e48] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-blue-900">
+                    <form onsubmit="handleWinSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-white font-bold font-ps text-[14px] shrink-0">PS C:\Users\Administrator&gt;</span>
+                        <input type="text" id="winCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-white font-ps text-[14px] focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Hasil Verifikasi -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Praktikum</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const ubuntuTerminalOutput = document.getElementById('ubuntuTerminalOutput');
+        const ubuntuCmdInput = document.getElementById('ubuntuCmdInput');
+        const winTerminalOutput = document.getElementById('winTerminalOutput');
+        const winCmdInput = document.getElementById('winCmdInput');
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let isNanoOpen = false;
+        let currentFile = "";
+        let fontSizeClass = "text-[15px]";
+
+        // Default Content File Netplan
+        const defaultNetplanYaml = `# This is the network configuration file provided by netplan.io.
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens33:
+      dhcp4: yes`;
+
+        // Virtual File System & State
+        const fileSystem = {
+            "/etc/netplan/00-installer-config.yaml": defaultNetplanYaml
+        };
+
+        let state = { 
+            ipLinkChecked: false,
+            netplanConfigured: false,
+            netplanApplied: false,
+            winIpConfigured: false,
+            winDnsConfigured: false,
+            winAddsInstalled: false,
+            winForestPromoted: false
+        };
+
+        // Switch Mobile View
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+            }
+        }
+
+        // Resizer Panel Logic
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 25 && newLeftWidth < 65) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'ubuntu') {
+                document.getElementById('terminal-workspace-ubuntu').classList.remove('hidden');
+                document.getElementById('terminal-workspace-windows').classList.add('hidden');
+                document.getElementById('term-tab-ubuntu').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-windows').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                ubuntuCmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-windows').classList.remove('hidden');
+                document.getElementById('terminal-workspace-ubuntu').classList.add('hidden');
+                document.getElementById('term-tab-windows').className = "px-4 py-2 bg-[#011e48] text-white font-mono text-xs rounded-t-lg border-t border-l border-r border-blue-900 flex items-center gap-2";
+                document.getElementById('term-tab-ubuntu').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                winCmdInput.focus();
+            }
+        }
+
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function changeFontSize() {
+            ubuntuTerminalOutput.classList.remove(fontSizeClass);
+            ubuntuCmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            ubuntuTerminalOutput.classList.add(fontSizeClass);
+            ubuntuCmdInput.classList.add(fontSizeClass);
+        }
+
+        function updateTasksUI() {
+            document.getElementById('task_ip_link').checked = state.ipLinkChecked;
+            document.getElementById('task_netplan_yaml').checked = state.netplanConfigured;
+            document.getElementById('task_netplan_apply').checked = state.netplanApplied;
+            document.getElementById('task_win_ip').checked = state.winIpConfigured && state.winDnsConfigured;
+            document.getElementById('task_win_adds').checked = state.winAddsInstalled;
+            document.getElementById('task_win_forest').checked = state.winForestPromoted;
+        }
+
+        // ================= UBUNTU ENGINE =================
+        function handleUbuntuSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = ubuntuCmdInput.value.trim();
+            if(!cmd) return;
+            printUbuntu(`<span class="text-[#4ade80] font-bold">root@ubuntu-server:~#</span> ${cmd}`);
+            ubuntuCmdInput.value = '';
+            processUbuntuCmd(cmd);
+        }
+
+        function printUbuntu(html) {
+            ubuntuTerminalOutput.innerHTML += `<div>${html}</div>`;
+            ubuntuTerminalOutput.scrollTop = ubuntuTerminalOutput.scrollHeight;
+        }
+
+        function processUbuntuCmd(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+
+            if (cleanCmd === 'ip link show' || cleanCmd === 'ip link') {
+                state.ipLinkChecked = true;
+                printUbuntu(`1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000\n    link/ether 00:0c:29:8b:80:a1 brd ff:ff:ff:ff:ff:ff`);
+            } 
+            else if (cleanCmd.startsWith('nano')) {
+                const filepath = cleanCmd.split(' ')[1] || '/etc/netplan/00-installer-config.yaml';
+                openNano(filepath);
+            }
+            else if (cleanCmd === 'netplan apply') {
+                const yaml = fileSystem["/etc/netplan/00-installer-config.yaml"] || "";
+                if (yaml.includes("192.168.10.10") && yaml.includes("ens33")) {
+                    state.netplanApplied = true;
+                    printUbuntu("<span class='text-green-400'>[ OK ] Configuration applied successfully to ens33.</span>");
+                } else {
+                    printUbuntu("<span class='text-amber-400'>[ WARNING ] Netplan applied, tetapi IP 192.168.10.10/24 belum dikonfigurasi dengan benar di file YAML.</span>");
+                }
+            }
+            else if (cleanCmd === 'ip a show ens33' || cleanCmd === 'ip a') {
+                if (state.netplanApplied) {
+                    printUbuntu(`2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000\n    link/ether 00:0c:29:8b:80:a1 brd ff:ff:ff:ff:ff:ff\n    inet <span class='text-green-400'>192.168.10.10/24</span> brd 192.168.10.255 scope global ens33\n       valid_lft forever preferred_lft forever`);
+                } else {
+                    printUbuntu(`2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000\n    link/ether 00:0c:29:8b:80:a1 brd ff:ff:ff:ff:ff:ff\n    inet 192.168.1.105/24 dynamic scope global ens33`);
+                }
+            }
+            else if (cleanCmd === 'clear') {
+                ubuntuTerminalOutput.innerHTML = '';
+            }
+            else {
+                printUbuntu(`bash: ${cleanCmd.split(' ')[0]}: command not found`);
+            }
+
+            updateTasksUI();
+            if(!isNanoOpen) ubuntuCmdInput.focus();
+        }
+
+        // Nano Editor
+        function openNano(file) {
+            isNanoOpen = true; 
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            printUbuntu(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            
+            if (currentFile.includes("netplan") && nanoTextarea.value.includes("192.168.10.10")) {
+                state.netplanConfigured = true;
+            }
+            
+            updateTasksUI();
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            ubuntuCmdInput.focus();
+        }
+
+        // ================= WINDOWS POWERSHELL ENGINE =================
+        function handleWinSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = winCmdInput.value.trim();
+            if(!cmd) return;
+            printWin(`<span class="text-white font-bold">PS C:\\Users\\Administrator&gt;</span> ${cmd}`);
+            winCmdInput.value = '';
+            processWinCmd(cmd);
+        }
+
+        function printWin(html) {
+            winTerminalOutput.innerHTML += `<div>${html}</div>`;
+            winTerminalOutput.scrollTop = winTerminalOutput.scrollHeight;
+        }
+
+        function processWinCmd(cmd) {
+            const clean = cmd.replace(/\s+/g, ' ');
+
+            if (clean.includes("New-NetIPAddress") && clean.includes("192.168.10.10")) {
+                state.winIpConfigured = true;
+                printWin(`
+IPAddress         : 192.168.10.10
+InterfaceIndex    : 12
+InterfaceAlias    : Ethernet
+AddressFamily     : IPv4
+Type              : Unicast
+PrefixLength      : 24
+DefaultGateway    : 192.168.10.1`);
+            }
+            else if (clean.includes("Set-DnsClientServerAddress") && (clean.includes("127.0.0.1") || clean.includes("8.8.8.8"))) {
+                state.winDnsConfigured = true;
+                printWin("<span class='text-cyan-300'>DNS server addresses set successfully on interface 'Ethernet'.</span>");
+            }
+            else if (clean.includes("Install-WindowsFeature") && clean.includes("AD-Domain-Services")) {
+                state.winAddsInstalled = true;
+                printWin(`
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             Success        {Active Directory Domain Services, Remote Server...}`);
+            }
+            else if (clean.includes("Install-ADDSForest") && clean.includes("domainanda.local")) {
+                if (!state.winAddsInstalled) {
+                    printWin("<span class='text-red-400'>Install-ADDSForest : Peran AD DS belum terinstal. Jalankan Install-WindowsFeature -Name AD-Domain-Services terlebih dahulu.</span>");
+                } else {
+                    state.winForestPromoted = true;
+                    printWin(`<span class='text-yellow-300'>[+] Creating New Domain Controller...
+[+] Domain 'domainanda.local' created successfully.
+[!] WARNING: The server will automatically restart to complete the promotion process.</span>`);
+                }
+            }
+            else if (clean.toLowerCase() === 'cls' || clean.toLowerCase() === 'clear') {
+                winTerminalOutput.innerHTML = '';
+            }
+            else {
+                printWin(`<span class='text-red-300'>${cmd.split(' ')[0]} : The term '${cmd.split(' ')[0]}' is not recognized as the name of a cmdlet.</span>`);
+            }
+
+            updateTasksUI();
+            winCmdInput.focus();
+        }
+
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Konfigurasi Network & Active Directory?")) location.reload(); 
+        }
+
+        function verifySubmission() {
+            let html = "<ul class='space-y-2 text-sm'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.ipLinkChecked, text: "Ubuntu: Memeriksa antarmuka jaringan (ip link show)" },
+                { cond: state.netplanConfigured, text: "Ubuntu: Mengisi konfigurasi Netplan IP 192.168.10.10" },
+                { cond: state.netplanApplied, text: "Ubuntu: Menerapkan Netplan (sudo netplan apply)" },
+                { cond: state.winIpConfigured && state.winDnsConfigured, text: "Windows: Mengatur Static IP 192.168.10.10 & DNS via PowerShell" },
+                { cond: state.winAddsInstalled, text: "Windows: Menginstal Role AD DS (Install-WindowsFeature)" },
+                { cond: state.winForestPromoted, text: "Windows: Promosi Domain Controller (domainanda.local)" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> ${c.text}</li>`;
+                else { html += `<li class="flex items-center gap-2"><i class="fa-solid fa-xmark text-red-500"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">NET-ADDS-PRO-2026</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Lengkapi seluruh perintah pada Ubuntu Server dan Windows Server sesuai panduan.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+        }
+
+        document.getElementById('terminal-workspace-ubuntu').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') ubuntuCmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-windows').addEventListener('click', () => {
+            winCmdInput.focus();
+        });
+    </script>
+</body>
+</html>

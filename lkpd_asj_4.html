@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Web Server Simulator - Apache Virtual Host & Nginx PHP-FPM</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+        
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
+            z-index: 30;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Header / Navbar Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-server text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Apache VHost & Nginx PHP-FPM</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verifikasi Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal & Browser
+        </button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[42%] md:min-w-[320px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Checklist</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                
+                <!-- Section A: Apache Virtual Host -->
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">BAGIAN 1: Apache Virtual Host</h2>
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Install Apache2</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install apache2 -y</code>
+                                <button onclick="copyCmd('sudo apt install apache2 -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Buat Web Directory & Halaman Uji</span>
+                            <div class="space-y-1">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo mkdir -p /var/www/domainanda.com/html</code>
+                                    <button onclick="copyCmd('sudo mkdir -p /var/www/domainanda.com/html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo chown -R $USER:$USER /var/www/domainanda.com/html</code>
+                                    <button onclick="copyCmd('sudo chown -R $USER:$USER /var/www/domainanda.com/html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">echo "&lt;h1&gt;Situs Apache Berhasil Diaktifkan!&lt;/h1&gt;" &gt; /var/www/domainanda.com/html/index.html</code>
+                                    <button onclick="copyCmd('echo &quot;&lt;h1&gt;Situs Apache Berhasil Diaktifkan!&lt;/h1&gt;&quot; &gt; /var/www/domainanda.com/html/index.html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Buat File Virtual Host</span>
+                            <p class="text-xs text-slate-500 mb-1">Buka file <code>/etc/apache2/sites-available/domainanda.com.conf</code> menggunakan nano:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/apache2/sites-available/domainanda.com.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/apache2/sites-available/domainanda.com.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto">&lt;VirtualHost *:80&gt;
+    ServerAdmin admin@domainanda.com
+    ServerName domainanda.com
+    ServerAlias www.domainanda.com
+    DocumentRoot /var/www/domainanda.com/html
+
+    &lt;Directory /var/www/domainanda.com/html&gt;
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog ${APACHE_LOG_DIR}/domainanda.com_error.log
+    CustomLog ${APACHE_LOG_DIR}/domainanda.com_access.log combined
+&lt;/VirtualHost&gt;</pre>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">4. Aktifkan Virtual Host & Reload Apache</span>
+                            <div class="space-y-1">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo a2ensite domainanda.com.conf</code>
+                                    <button onclick="copyCmd('sudo a2ensite domainanda.com.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo a2dissite 000-default.conf</code>
+                                    <button onclick="copyCmd('sudo a2dissite 000-default.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo apache2ctl configtest</code>
+                                    <button onclick="copyCmd('sudo apache2ctl configtest')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl reload apache2</code>
+                                    <button onclick="copyCmd('sudo systemctl reload apache2')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- Section B: Nginx Server Block & PHP-FPM -->
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-emerald-500 pl-2 mb-3">BAGIAN 2: Nginx Server Block & PHP-FPM</h2>
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Install Nginx & PHP-FPM</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install nginx php-fpm -y</code>
+                                <button onclick="copyCmd('sudo apt install nginx php-fpm -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Buat Web Directory & File PHP</span>
+                            <div class="space-y-1">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo mkdir -p /var/www/situsku.com/html</code>
+                                    <button onclick="copyCmd('sudo mkdir -p /var/www/situsku.com/html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo chown -R www-data:www-data /var/www/situsku.com/html</code>
+                                    <button onclick="copyCmd('sudo chown -R www-data:www-data /var/www/situsku.com/html')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">echo "&lt;?php phpinfo(); ?&gt;" | sudo tee /var/www/situsku.com/html/info.php</code>
+                                    <button onclick="copyCmd('echo &quot;&lt;?php phpinfo(); ?&gt;&quot; | sudo tee /var/www/situsku.com/html/info.php')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Buat Konfigurasi Server Block Nginx</span>
+                            <p class="text-xs text-slate-500 mb-1">Buka file <code>/etc/nginx/sites-available/situsku.com</code> menggunakan nano:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/nginx/sites-available/situsku.com</code>
+                                <button onclick="copyCmd('sudo nano /etc/nginx/sites-available/situsku.com')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto">server {
+    listen 80;
+    listen [::]:80;
+
+    server_name situsku.com www.situsku.com;
+    root /var/www/situsku.com/html;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}</pre>
+                        </li>
+
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">4. Aktifkan & Uji Konfigurasi Nginx</span>
+                            <div class="space-y-1">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo ln -s /etc/nginx/sites-available/situsku.com /etc/nginx/sites-enabled/</code>
+                                    <button onclick="copyCmd('sudo ln -s /etc/nginx/sites-available/situsku.com /etc/nginx/sites-enabled/')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo nginx -t</code>
+                                    <button onclick="copyCmd('sudo nginx -t')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl reload nginx</code>
+                                    <button onclick="copyCmd('sudo systemctl reload nginx')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Multi-Site Web Server</h2>
+                <div class="flex flex-col items-center gap-4">
+                    
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[260px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm">Debian / Ubuntu Server</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded mt-1">192.168.1.100</code>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 w-full max-w-[300px]">
+                        <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg text-center">
+                            <span class="text-xs font-bold text-indigo-700 block">Apache VHost</span>
+                            <span class="text-[11px] text-indigo-900 font-mono">domainanda.com</span>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+                            <span class="text-xs font-bold text-emerald-700 block">Nginx + PHP-FPM</span>
+                            <span class="text-[11px] text-emerald-900 font-mono">situsku.com</span>
+                        </div>
+                    </div>
+
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[260px]">
+                        <i class="fa-solid fa-desktop text-3xl text-slate-600 mb-2"></i>
+                        <span class="font-bold text-sm">Client Browser</span>
+                        <span class="text-[11px] text-slate-500 mt-0.5">http://domainanda.com</span>
+                        <span class="text-[11px] text-slate-500">http://situsku.com/info.php</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks Checklist -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Checklist Progres Praktikum</h2>
+                <div class="space-y-2.5">
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ap_inst" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Install Paket Apache2</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ap_dir" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Directory & File HTML Apache (`/var/www/domainanda.com/html/index.html`)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ap_conf" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Konfigurasi & Aktivasi Virtual Host (`a2ensite domainanda.com.conf`)</span>
+                    </label>
+
+                    <hr class="my-2 border-slate-200">
+
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ng_inst" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Install Nginx & PHP-FPM</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ng_dir" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Directory & File PHP Nginx (`/var/www/situsku.com/html/info.php`)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ng_conf" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Konfigurasi Server Block & Symlink (`sites-enabled/situsku.com`)</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer (Desktop) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal & Browser Simulator -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal / Browser Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@ubuntu-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-green-400"></i> Client Browser Test
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux ubuntu-server 6.2.0-39-generic x86_64</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Mon Sep 07 2026 14:00:00 from 192.168.1.50</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@ubuntu-server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: ...</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal / Browser Workspace: Client Simulator -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-slate-900">
+                <div class="bg-slate-800 p-2 border-b border-slate-700 flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 px-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                    </div>
+                    <form onsubmit="handleBrowserNavigate(event)" class="flex-1 flex items-center bg-slate-900 rounded border border-slate-700 px-3 py-1">
+                        <i class="fa-solid fa-globe text-xs text-slate-500 mr-2"></i>
+                        <input type="text" id="browserUrl" value="http://domainanda.com" class="w-full bg-transparent text-xs text-slate-200 font-mono outline-none">
+                        <button type="submit" class="text-xs text-indigo-400 hover:text-indigo-300 ml-2 font-bold">GO</button>
+                    </form>
+                </div>
+
+                <div id="browserDisplay" class="flex-grow bg-white p-6 overflow-y-auto text-slate-800">
+                    <div class="text-center text-slate-400 my-10">
+                        <i class="fa-solid fa-globe text-5xl mb-3"></i>
+                        <p class="text-sm font-semibold">Uji domain <code>http://domainanda.com</code> atau <code>http://situsku.com/info.php</code></p>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 bg-[#1e293b] p-3 shrink-0">
+                    <div id="clientTerminalOutput" class="font-linux text-xs text-slate-400 mb-2 max-h-24 overflow-y-auto custom-scroll">
+                        💡 <i>Ketik <code>curl http://domainanda.com</code> atau <code>curl http://situsku.com/info.php</code> untuk pengujian terminal client.</i>
+                    </div>
+                    <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#3b82f6] font-bold font-linux text-xs shrink-0">siswa@client-pc:~$</span>
+                        <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-xs focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Konfigurasi</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700"></div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const terminalOutput = document.getElementById('terminalOutput');
+        const cmdInput = document.getElementById('cmdInput');
+        const clientTerminalOutput = document.getElementById('clientTerminalOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
+        const browserUrl = document.getElementById('browserUrl');
+        const browserDisplay = document.getElementById('browserDisplay');
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let isNanoOpen = false;
+        let currentFile = "";
+        let fontSizeClass = "text-[15px]";
+
+        // File System Mock
+        const fileSystem = {};
+
+        let state = { 
+            apacheInstalled: false,
+            apacheDirCreated: false,
+            apacheHtmlCreated: false,
+            apacheVhostCreated: false,
+            apacheSiteEnabled: false,
+            apacheReloaded: false,
+
+            nginxInstalled: false,
+            phpFpmInstalled: false,
+            nginxDirCreated: false,
+            nginxPhpCreated: false,
+            nginxBlockCreated: false,
+            nginxSiteEnabled: false,
+            nginxReloaded: false
+        };
+
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                setTimeout(() => cmdInput.focus(), 100);
+            }
+        }
+
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            document.getElementById('task_ap_inst').checked = state.apacheInstalled;
+            document.getElementById('task_ap_dir').checked = state.apacheDirCreated && state.apacheHtmlCreated;
+            document.getElementById('task_ap_conf').checked = state.apacheVhostCreated && state.apacheSiteEnabled && state.apacheReloaded;
+
+            document.getElementById('task_ng_inst').checked = state.nginxInstalled && state.phpFpmInstalled;
+            document.getElementById('task_ng_dir').checked = state.nginxDirCreated && state.nginxPhpCreated;
+            document.getElementById('task_ng_conf').checked = state.nginxBlockCreated && state.nginxSiteEnabled && state.nginxReloaded;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+        }
+
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@ubuntu-server:~#</span> ${cmd}`);
+            cmdInput.value = '';
+            processCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
+        }
+
+        function printToTerminal(html) {
+            terminalOutput.innerHTML += `<div>${html}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+
+            if(cleanCmd === 'apt update') { 
+                printToTerminal("Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease\nReading package lists... Done"); 
+            } 
+            else if(cleanCmd.includes('apt install apache2')) { 
+                state.apacheInstalled = true; 
+                printToTerminal("Setting up apache2 (2.4.52-1ubuntu4.6)..."); 
+                updateTasks(); 
+            }
+            else if(cleanCmd.includes('apt install nginx php-fpm')) {
+                state.nginxInstalled = true;
+                state.phpFpmInstalled = true;
+                printToTerminal("Setting up nginx (1.18.0-6ubuntu14.4)...\nSetting up php8.1-fpm (8.1.2-1ubuntu2.14)...");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('mkdir -p /var/www/domainanda.com/html')) {
+                state.apacheDirCreated = true;
+                printToTerminal("");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('mkdir -p /var/www/situsku.com/html')) {
+                state.nginxDirCreated = true;
+                printToTerminal("");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('chown -R')) {
+                printToTerminal("");
+            }
+            else if(cleanCmd.includes('domainanda.com/html/index.html')) {
+                fileSystem["/var/www/domainanda.com/html/index.html"] = "<h1>Situs Apache Berhasil Diaktifkan!</h1>";
+                state.apacheHtmlCreated = true;
+                printToTerminal("");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('situsku.com/html/info.php')) {
+                fileSystem["/var/www/situsku.com/html/info.php"] = "<?php phpinfo(); ?>";
+                state.nginxPhpCreated = true;
+                printToTerminal("<?php phpinfo(); ?>");
+                updateTasks();
+            }
+            else if(cleanCmd.startsWith('nano')) {
+                const path = cleanCmd.split(' ')[1];
+                if(path) openNano(path);
+            }
+            else if(cleanCmd.includes('a2ensite domainanda.com')) {
+                state.apacheSiteEnabled = true;
+                printToTerminal("Enabling site domainanda.com.\nTo activate the new configuration, you need to run:\n  systemctl reload apache2");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('a2dissite 000-default')) {
+                printToTerminal("Site 000-default disabled.");
+            }
+            else if(cleanCmd === 'apache2ctl configtest') {
+                printToTerminal("Syntax OK");
+            }
+            else if(cleanCmd.includes('ln -s /etc/nginx/sites-available/situsku.com /etc/nginx/sites-enabled/')) {
+                state.nginxSiteEnabled = true;
+                printToTerminal("");
+                updateTasks();
+            }
+            else if(cleanCmd === 'nginx -t') {
+                printToTerminal("nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful");
+            }
+            else if(cleanCmd.includes('systemctl reload apache2')) {
+                state.apacheReloaded = true;
+                printToTerminal("[ OK ] Reloaded Apache Web Server.");
+                updateTasks();
+            }
+            else if(cleanCmd.includes('systemctl reload nginx')) {
+                state.nginxReloaded = true;
+                printToTerminal("[ OK ] Reloaded Nginx Server.");
+                updateTasks();
+            }
+            else if(cleanCmd.startsWith('curl')) {
+                const target = cleanCmd.split(' ')[1] || '';
+                renderCurlOutput(target);
+            }
+            else if(cmd === 'submit-lab') { verifySubmission(); }
+            else if(cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${cleanCmd.split(' ')[0]}: command not found`); }
+            
+            if(!isNanoOpen) cmdInput.focus();
+        }
+
+        function openNano(file) {
+            isNanoOpen = true; 
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            if(currentFile.includes('domainanda.com.conf')) state.apacheVhostCreated = true;
+            if(currentFile.includes('situsku.com')) state.nginxBlockCreated = true;
+            if(currentFile.includes('index.html')) state.apacheHtmlCreated = true;
+            if(currentFile.includes('info.php')) state.nginxPhpCreated = true;
+            
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            cmdInput.focus();
+        }
+
+        // Browser & Client Terminal Simulation
+        function handleBrowserNavigate(e) {
+            if(e) e.preventDefault();
+            renderWebPage(browserUrl.value.trim());
+        }
+
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">siswa@client-pc:~$</span> ${cmd}`);
+            clientCmdInput.value = '';
+
+            if (cmd.startsWith('curl')) {
+                const parts = cmd.split(' ');
+                const targetUrl = parts[1] || 'http://domainanda.com';
+                browserUrl.value = targetUrl;
+                renderWebPage(targetUrl, true);
+            } else {
+                printToClientTerminal(`Command '${cmd}' not found.`);
+            }
+        }
+
+        function printToClientTerminal(html) {
+            clientTerminalOutput.innerHTML += `<div>${html}</div>`;
+            clientTerminalOutput.scrollTop = clientTerminalOutput.scrollHeight;
+        }
+
+        function renderCurlOutput(url) {
+            if(url.includes('domainanda.com')) {
+                if(state.apacheReloaded && state.apacheSiteEnabled) {
+                    printToTerminal(escapeHtml(fileSystem["/var/www/domainanda.com/html/index.html"] || "<h1>Situs Apache Berhasil Diaktifkan!</h1>"));
+                } else {
+                    printToTerminal("<span class='text-red-400'>curl: (7) Failed to connect to domainanda.com port 80: Connection refused</span>");
+                }
+            } else if(url.includes('situsku.com')) {
+                if(state.nginxReloaded && state.nginxSiteEnabled) {
+                    printToTerminal("PHP Version 8.1.2 - phpinfo()\nSystem: Linux ubuntu-server\nBuild Date: Sep 7 2026");
+                } else {
+                    printToTerminal("<span class='text-red-400'>curl: (7) Failed to connect to situsku.com port 80: Connection refused</span>");
+                }
+            } else {
+                printToTerminal("HTML Default Page Server");
+            }
+        }
+
+        function renderWebPage(url, fromTerminal = false) {
+            let cleanUrl = url.replace('http://', '').replace('https://', '');
+
+            if(cleanUrl.startsWith('domainanda.com')) {
+                if(state.apacheReloaded && state.apacheSiteEnabled && state.apacheInstalled) {
+                    const content = fileSystem["/var/www/domainanda.com/html/index.html"] || "<h1>Situs Apache Berhasil Diaktifkan!</h1>";
+                    browserDisplay.innerHTML = `<div class="p-4 bg-slate-50 border rounded shadow-sm">${content}</div>`;
+                    if(fromTerminal) printToClientTerminal(`<div class="bg-slate-800 p-2 rounded text-slate-200 font-mono text-xs mt-1">${escapeHtml(content)}</div>`);
+                } else {
+                    showBrowserError("ERR_NAME_NOT_RESOLVED / CONNECTION_REFUSED", "Server Apache Virtual Host belum aktif atau durasi reload belum dilakukan.");
+                    if(fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (7) Failed to connect to domainanda.com port 80</span>");
+                }
+            } 
+            else if(cleanUrl.startsWith('situsku.com')) {
+                if(state.nginxReloaded && state.nginxSiteEnabled && state.nginxInstalled) {
+                    browserDisplay.innerHTML = `
+                        <div class="border border-slate-300 rounded p-4 font-sans text-xs bg-white">
+                            <div class="bg-indigo-900 text-white p-3 text-center font-bold text-lg rounded-t">PHP Version 8.1.2-1ubuntu2.14</div>
+                            <table class="w-full mt-3 border-collapse border border-slate-200">
+                                <tr class="bg-slate-100"><td class="p-2 border font-bold">System</td><td class="p-2 border">Linux ubuntu-server 6.2.0-39-generic</td></tr>
+                                <tr><td class="p-2 border font-bold">Server API</td><td class="p-2 border">FPM/FastCGI</td></tr>
+                                <tr class="bg-slate-100"><td class="p-2 border font-bold">Virtual Directory Support</td><td class="p-2 border">disabled</td></tr>
+                                <tr><td class="p-2 border font-bold">Document Root</td><td class="p-2 border">/var/www/situsku.com/html</td></tr>
+                            </table>
+                        </div>`;
+                    if(fromTerminal) printToClientTerminal(`<div class="bg-slate-800 p-2 rounded text-slate-200 font-mono text-xs mt-1">PHP Version 8.1.2 - phpinfo() OK</div>`);
+                } else {
+                    showBrowserError("502 Bad Gateway / Connection Refused", "Server Block Nginx atau PHP-FPM belum di-reload secara tepat.");
+                    if(fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (7) Failed to connect to situsku.com port 80</span>");
+                }
+            } 
+            else {
+                showBrowserError("404 Not Found", "Host / Domain tidak ditemukan dalam Server Block maupun Virtual Host.");
+            }
+        }
+
+        function showBrowserError(title, desc) {
+            browserDisplay.innerHTML = `
+                <div class="text-center text-red-500 my-10">
+                    <i class="fa-solid fa-triangle-exclamation text-5xl mb-3"></i>
+                    <h3 class="font-bold text-lg">${title}</h3>
+                    <p class="text-xs text-slate-500 mt-1">${desc}</p>
+                </div>`;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Web Server?")) location.reload(); 
+        }
+
+        function verifySubmission() {
+            let html = "<ul class='space-y-2 text-xs'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.apacheInstalled, text: "Paket Apache2 Terinstal" },
+                { cond: state.apacheDirCreated && state.apacheHtmlCreated, text: "Directory Root & HTML Apache (domainanda.com)" },
+                { cond: state.apacheVhostCreated && state.apacheSiteEnabled && state.apacheReloaded, text: "Virtual Host Apache Aktif (a2ensite & systemctl reload)" },
+                { cond: state.nginxInstalled && state.phpFpmInstalled, text: "Paket Nginx & PHP-FPM Terinstal" },
+                { cond: state.nginxDirCreated && state.nginxPhpCreated, text: "Directory Root & File PHP Nginx (situsku.com)" },
+                { cond: state.nginxBlockCreated && state.nginxSiteEnabled && state.nginxReloaded, text: "Server Block Nginx Aktif (Symlink & systemctl reload)" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-VHOST-NGINX</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Lengkapi seluruh langkah konfigurasi Apache VHost dan Nginx Server Block sesuai panduan.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
+        });
+    </script>
+</body>
+</html>

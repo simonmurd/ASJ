@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro Webmin & cPanel/WHM Server Simulator</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-server text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Webmin & cPanel/WHM</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Mobile (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal & Browser
+        </button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[42%] md:min-w-[300px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Konfigurasi Webmin di Linux (Debian/Ubuntu).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Penambahan repositori & GPG Key resmi Webmin.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Konfigurasi Firewall UFW Port 10000/tcp.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Konfigurasi cPanel/WHM di Linux (AlmaLinux/Ubuntu).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Pengaturan FQDN Hostname dan eksekusi skrip installer cPanel.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Instruksi Langkah Demi Langkah</h2>
+                    
+                    <!-- BAGIAN 1: WEBMIN -->
+                    <div class="mb-6">
+                        <span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-1 rounded text-xs inline-block mb-3">BAGIAN 1: KONFIGURASI WEBMIN</span>
+                        <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                            
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">1. Menambahkan Repository Webmin</span>
+                                <p class="text-xs text-slate-500 mb-2">Persiapan repository & dependency serta tambahkan kunci GPG resmi Webmin ke sistem:</p>
+                                
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                    <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo apt install software-properties-common apt-transport-https wget -y</code>
+                                    <button onclick="copyCmd('sudo apt install software-properties-common apt-transport-https wget -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -</code>
+                                    <button onclick="copyCmd('wget -q http://www.webmin.com/jcameron-key.asc -O- | sudo apt-key add -')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo add-apt-repository "deb [arch=amd64] http://download.webmin.com/download/repository sdirect distribution"</code>
+                                    <button onclick="copyCmd('sudo add-apt-repository &quot;deb [arch=amd64] http://download.webmin.com/download/repository sdirect distribution&quot;')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">2. Menginstall Webmin</span>
+                                <p class="text-xs text-slate-500 mb-2">Jalankan perintah instalasi Webmin melalui package manager (Webmin akan otomatis berjalan di Port 10000):</p>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                    <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo apt install webmin -y</code>
+                                    <button onclick="copyCmd('sudo apt install webmin -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">3. Membuka Port Webmin (UFW Firewall)</span>
+                                <p class="text-xs text-slate-500 mb-2">Izinkan trafik lalu lintas data masuk ke Port 10000 Webmin:</p>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo ufw allow 10000/tcp</code>
+                                    <button onclick="copyCmd('sudo ufw allow 10000/tcp')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo ufw reload</code>
+                                    <button onclick="copyCmd('sudo ufw reload')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">4. Login ke Dashboard Webmin</span>
+                                <p class="text-xs text-slate-500 mb-1">Buka browser di Client Simulator lalu akses:</p>
+                                <div class="bg-slate-800 text-slate-100 p-2 rounded text-xs font-mono mb-1">https://192.168.1.100:10000</div>
+                                <p class="text-[11px] text-slate-500">Masuk menggunakan kredensial akun root server.</p>
+                            </li>
+
+                        </ol>
+                    </div>
+
+                    <!-- BAGIAN 2: CPANEL / WHM -->
+                    <div>
+                        <span class="bg-orange-100 text-orange-800 font-bold px-2 py-1 rounded text-xs inline-block mb-3">BAGIAN 2: KONFIGURASI CPANEL / WHM</span>
+                        <div class="bg-amber-50 border border-amber-200 p-2.5 rounded mb-3 text-xs text-amber-800">
+                            <strong>Prasyarat Penting cPanel:</strong> Sistem operasi harus bersih (Clean Install) tanpa web server/MySQL pra-install, serta membutuhkan FQDN Hostname yang valid.
+                        </div>
+                        <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                            
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">1. Set Hostname Server FQDN</span>
+                                <p class="text-xs text-slate-500 mb-2">Atur hostname server menggunakan Fully Qualified Domain Name:</p>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">hostnamectl set-hostname server.domainanda.com</code>
+                                    <button onclick="copyCmd('hostnamectl set-hostname server.domainanda.com')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">2. Download & Eksekusi Installer</span>
+                                <p class="text-xs text-slate-500 mb-2">Jalankan skrip instalasi resmi cPanel dari terminal:</p>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">cd /home && curl -o latest -L https://secured.cpanel.net/latest && sh latest</code>
+                                    <button onclick="copyCmd('cd /home && curl -o latest -L https://secured.cpanel.net/latest && sh latest')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <span class="font-bold text-slate-800 block mb-1">3. Akses WHM Pertama Kali</span>
+                                <p class="text-xs text-slate-500 mb-1">Buka browser di Client Simulator lalu akses link aktivasi WHM:</p>
+                                <div class="bg-slate-800 text-slate-100 p-2 rounded text-xs font-mono mb-1">https://192.168.1.100:2087</div>
+                                <p class="text-[11px] text-slate-500">Masuk sebagai root lalu selesaikan Initial Setup Wizard (Email Admin, NameServer, dan Lisensi).</p>
+                            </li>
+
+                        </ol>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Server Control Panel</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm text-center">Linux Web Server</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.100</code>
+                        <div class="flex gap-2 mt-2">
+                            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-mono px-1.5 py-0.5 rounded">Port 10000 (Webmin)</span>
+                            <span class="text-[10px] bg-orange-100 text-orange-700 font-mono px-1.5 py-0.5 rounded">Port 2087 (WHM)</span>
+                        </div>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Switch / Router</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-desktop text-4xl text-green-500 mb-2"></i>
+                        <span class="font-bold text-sm">Client PC (Admin Browser)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.50</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_repo" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Tambah Repository & Key GPG Webmin</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_webmin" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Install Paket Webmin (Port 10000)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_ufw" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi UFW Firewall (Allow 10000/tcp)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_hostname" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Set Hostname FQDN Server</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_cpanel" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Download & Eksekusi Skrip cPanel Installer</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_web_access" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Akses Dashboard Webmin (:10000) atau WHM (:2087)</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal & Browser Simulator -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal / Browser Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@control-panel-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-green-400"></i> Client PC Browser
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Mon, 07 Sep 2026 13:30:00 WIB from 192.168.1.50</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Terminal / Browser Workspace: Client Simulator -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-slate-900">
+                <!-- Browser Header Simulator -->
+                <div class="bg-slate-800 p-2 border-b border-slate-700 flex items-center gap-2 shrink-0">
+                    <div class="flex items-center gap-1.5 px-2">
+                        <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                    </div>
+                    <form onsubmit="handleBrowserNavigate(event)" class="flex-1 flex items-center bg-slate-900 rounded border border-slate-700 px-3 py-1">
+                        <i class="fa-solid fa-lock text-xs text-slate-500 mr-2"></i>
+                        <input type="text" id="browserUrl" value="https://192.168.1.100:10000" class="w-full bg-transparent text-xs text-slate-200 font-mono outline-none">
+                        <button type="submit" class="text-xs text-indigo-400 hover:text-indigo-300 ml-2 font-bold">GO</button>
+                    </form>
+                </div>
+
+                <!-- Browser Body Render Display -->
+                <div id="browserDisplay" class="flex-grow bg-slate-100 p-6 overflow-y-auto text-slate-800 flex items-center justify-center">
+                    <div class="text-center text-slate-400 my-10">
+                        <i class="fa-solid fa-globe text-5xl mb-3"></i>
+                        <p class="text-sm font-semibold">Masukkan URL <code>https://192.168.1.100:10000</code> (Webmin) atau <code>https://192.168.1.100:2087</code> (WHM) di atas lalu tekan GO.</p>
+                    </div>
+                </div>
+
+                <!-- Terminal Client Prompt -->
+                <div class="border-t border-slate-800 bg-[#1e293b] p-3 shrink-0">
+                    <div id="clientTerminalOutput" class="font-linux text-xs text-slate-400 mb-2 max-h-24 overflow-y-auto custom-scroll">
+                        💡 <i>Ketik URL Webmin atau WHM di kolom address bar di atas.</i>
+                    </div>
+                    <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#3b82f6] font-bold font-linux text-xs shrink-0">siswa@client-pc:~$</span>
+                        <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-xs focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Webmin & cPanel Lab</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const terminalOutput = document.getElementById('terminalOutput');
+        const cmdInput = document.getElementById('cmdInput');
+        const clientTerminalOutput = document.getElementById('clientTerminalOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
+        const browserUrl = document.getElementById('browserUrl');
+        const browserDisplay = document.getElementById('browserDisplay');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let fontSizeClass = "text-[15px]";
+
+        // Virtual Lab State
+        let state = { 
+            webminRepoAdded: false,
+            webminInstalled: false,
+            ufwWebminAllowed: false,
+            hostnameSet: false,
+            cpanelInstalled: false,
+            webminAccessed: false,
+            whmAccessed: false
+        };
+
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                
+                setTimeout(() => {
+                    const isServerActive = !document.getElementById('terminal-workspace-server').classList.contains('hidden');
+                    if (isServerActive) {
+                        document.getElementById('cmdInput').focus();
+                    } else {
+                        document.getElementById('clientCmdInput').focus();
+                    }
+                }, 100);
+            }
+        }
+
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        // Copy Command Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            document.getElementById('task_repo').checked = state.webminRepoAdded;
+            document.getElementById('task_webmin').checked = state.webminInstalled;
+            document.getElementById('task_ufw').checked = state.ufwWebminAllowed;
+            document.getElementById('task_hostname').checked = state.hostnameSet;
+            document.getElementById('task_cpanel').checked = state.cpanelInstalled;
+            document.getElementById('task_web_access').checked = state.webminAccessed || state.whmAccessed;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@server:~#</span> ${cmd}`);
+            cmdInput.value = '';
+            processCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
+        }
+
+        function printToTerminal(html) {
+            terminalOutput.innerHTML += `<div>${html}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
+            const baseCmd = args[0];
+
+            if (cleanCmd === 'apt update') {
+                printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nGet:2 http://download.webmin.com/download/repository sdirect InRelease\nReading package lists... Done");
+            } 
+            else if (cleanCmd.includes('apt install software-properties-common') || cleanCmd.includes('apt install apt-transport-https')) {
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nsoftware-properties-common is already the newest version.\napt-transport-https is already the newest version.\nwget is already the newest version.");
+            }
+            else if (cleanCmd.includes('jcameron-key.asc') || cleanCmd.includes('apt-key add')) {
+                state.webminRepoAdded = true;
+                printToTerminal("OK\nKey imported: Jamie Cameron <jcameron@webmin.com>");
+                updateTasks();
+            }
+            else if (cleanCmd.includes('add-apt-repository')) {
+                state.webminRepoAdded = true;
+                printToTerminal("Repository 'deb [arch=amd64] http://download.webmin.com/download/repository sdirect distribution' added.\nRun 'apt update' to update package lists.");
+                updateTasks();
+            }
+            else if (cleanCmd.includes('apt install webmin')) {
+                state.webminInstalled = true;
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed:\n  webmin libauthen-pam-perl libio-pty-perl\nSetting up webmin (2.100)...\nWebmin install complete. You can now login to https://192.168.1.100:10000/ as root with your root password.");
+                updateTasks();
+            }
+            else if (cleanCmd.includes('ufw allow 10000') || cleanCmd.includes('ufw allow 10000/tcp')) {
+                state.ufwWebminAllowed = true;
+                printToTerminal("Rule added\nRule added (v6)");
+                updateTasks();
+            }
+            else if (cleanCmd === 'ufw reload') {
+                printToTerminal("Firewall reloaded");
+            }
+            else if (cleanCmd.startsWith('hostnamectl set-hostname')) {
+                state.hostnameSet = true;
+                const newHost = cleanCmd.split(' ').pop();
+                printToTerminal(`Hostname successfully updated to: ${newHost}`);
+                updateTasks();
+            }
+            else if (cleanCmd.includes('curl') && cleanCmd.includes('cpanel') || cleanCmd.includes('sh latest') || cleanCmd.includes('latest')) {
+                state.cpanelInstalled = true;
+                printToTerminal("[INFO] Beginning cPanel & WHM installation...\n[INFO] Validating environment (Clean Install OS, FQDN Hostname)...\n[INFO] Installing cPanel base system dependencies...\n[INFO] Downloading installer packages...\n[INFO] cPanel installation completed successfully!\n[INFO] You can now access WHM at https://192.168.1.100:2087");
+                updateTasks();
+            }
+            else if (cmd === 'submit-lab') { verifySubmission(); }
+            else if (cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${args[0]}: command not found`); }
+            
+            cmdInput.focus();
+        }
+
+        // Client Browser & Terminal Simulator Core
+        function handleBrowserNavigate(e) {
+            if(e) e.preventDefault();
+            const url = browserUrl.value.trim();
+            renderWebPage(url);
+        }
+
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">siswa@client-pc:~$</span> ${cmd}`);
+            clientCmdInput.value = '';
+
+            if (cmd.startsWith('curl')) {
+                const parts = cmd.split(' ');
+                const targetUrl = parts[1] || 'https://192.168.1.100:10000';
+                browserUrl.value = targetUrl;
+                renderWebPage(targetUrl, true);
+            } else {
+                printToClientTerminal(`Command '${cmd}' not found. Akses via Browser Simulator atau gunakan perintah: <code>curl https://192.168.1.100:10000</code>`);
+            }
+        }
+
+        function printToClientTerminal(html) {
+            clientTerminalOutput.innerHTML += `<div>${html}</div>`;
+            clientTerminalOutput.scrollTop = clientTerminalOutput.scrollHeight;
+        }
+
+        function renderWebPage(url, fromTerminal = false) {
+            const cleanUrl = url.toLowerCase().trim();
+
+            if (cleanUrl.includes(':10000')) {
+                if (!state.webminInstalled) {
+                    browserDisplay.innerHTML = `
+                        <div class="text-center text-red-500 my-10">
+                            <i class="fa-solid fa-triangle-exclamation text-5xl mb-3"></i>
+                            <h3 class="font-bold text-lg">ERR_CONNECTION_REFUSED</h3>
+                            <p class="text-xs text-slate-500 mt-1">Sistem gagal terhubung ke Port 10000. Pastikan Webmin sudah di-install.</p>
+                        </div>`;
+                    if (fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (7) Failed to connect to 192.168.1.100 port 10000: Connection refused</span>");
+                    return;
+                }
+
+                if (!state.ufwWebminAllowed) {
+                    browserDisplay.innerHTML = `
+                        <div class="text-center text-amber-600 my-10">
+                            <i class="fa-solid fa-shield-halved text-5xl mb-3"></i>
+                            <h3 class="font-bold text-lg">ERR_CONNECTION_TIMED_OUT</h3>
+                            <p class="text-xs text-slate-500 mt-1">Koneksi diblokir Firewall (UFW). Jalankan <code>sudo ufw allow 10000/tcp</code> di server.</p>
+                        </div>`;
+                    if (fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (28) Failed to connect to 192.168.1.100 port 10000: Connection timed out</span>");
+                    return;
+                }
+
+                state.webminAccessed = true;
+                updateTasks();
+
+                browserDisplay.innerHTML = `
+                    <div class="max-w-sm w-full mx-auto my-auto p-6 bg-slate-900 text-white rounded-lg shadow-xl border border-slate-700">
+                        <div class="flex justify-center mb-4">
+                            <i class="fa-solid fa-gears text-5xl text-indigo-400"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-center mb-1">Webmin 2.100</h2>
+                        <p class="text-xs text-slate-400 text-center mb-6">Login to Webmin Control Panel Dashboard</p>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Username</label>
+                                <input type="text" value="root" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-xs text-white" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Password</label>
+                                <input type="password" value="••••••••" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-xs text-white" readonly>
+                            </div>
+                            <div class="p-2.5 bg-indigo-600/30 border border-indigo-500/50 rounded text-xs text-indigo-200 text-center font-bold mt-4">
+                                <i class="fa-solid fa-circle-check mr-1 text-green-400"></i> Webmin Running & Connected!
+                            </div>
+                        </div>
+                    </div>`;
+
+                if (fromTerminal) {
+                    printToClientTerminal(`<div class="bg-slate-800 p-2 rounded text-slate-200 mt-1 font-mono">&lt;html&gt;&lt;body&gt;&lt;h1&gt;Webmin Login Dashboard&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</div>`);
+                }
+            } 
+            else if (cleanUrl.includes(':2087')) {
+                if (!state.cpanelInstalled) {
+                    browserDisplay.innerHTML = `
+                        <div class="text-center text-red-500 my-10">
+                            <i class="fa-solid fa-triangle-exclamation text-5xl mb-3"></i>
+                            <h3 class="font-bold text-lg">ERR_CONNECTION_REFUSED</h3>
+                            <p class="text-xs text-slate-500 mt-1">Sistem gagal terhubung ke Port 2087 (WHM). Jalankan skrip installer cPanel terlebih dahulu.</p>
+                        </div>`;
+                    if (fromTerminal) printToClientTerminal("<span class='text-red-400'>curl: (7) Failed to connect to 192.168.1.100 port 2087: Connection refused</span>");
+                    return;
+                }
+
+                state.whmAccessed = true;
+                updateTasks();
+
+                browserDisplay.innerHTML = `
+                    <div class="max-w-md w-full mx-auto my-auto p-6 bg-white rounded-lg shadow-lg border border-slate-200 text-slate-800">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-server text-2xl text-orange-600"></i>
+                                <span class="font-bold text-lg">cPanel & WHM</span>
+                            </div>
+                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded">Initial Setup Wizard</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4">Selamat datang di WebHost Manager (WHM). Hostname Server FQDN Anda: <code class="bg-slate-100 text-orange-600 font-mono px-1 rounded">server.domainanda.com</code></p>
+                        <div class="space-y-3 text-xs bg-slate-50 p-3 rounded border border-slate-200">
+                            <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                                <span class="text-slate-500">Administrator Email:</span>
+                                <span class="font-semibold text-slate-700">admin@domainanda.com</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                                <span class="text-slate-500">Nameserver 1:</span>
+                                <span class="font-mono text-slate-700">ns1.domainanda.com</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">Nameserver 2:</span>
+                                <span class="font-mono text-slate-700">ns2.domainanda.com</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-2.5 bg-green-50 border border-green-200 rounded text-center text-xs font-bold text-green-700">
+                            <i class="fa-solid fa-circle-check text-green-600 mr-1"></i> WHM Active & Configured!
+                        </div>
+                    </div>`;
+
+                if (fromTerminal) {
+                    printToClientTerminal(`<div class="bg-slate-800 p-2 rounded text-slate-200 mt-1 font-mono">&lt;html&gt;&lt;body&gt;&lt;h1&gt;cPanel WHM Initial Setup&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;</div>`);
+                }
+            } 
+            else {
+                browserDisplay.innerHTML = `
+                    <div class="text-center text-slate-400 my-10">
+                        <i class="fa-solid fa-globe text-5xl mb-3"></i>
+                        <p class="text-sm font-semibold">Masukkan URL <code>https://192.168.1.100:10000</code> (Webmin) atau <code>https://192.168.1.100:2087</code> (WHM) di atas lalu tekan GO.</p>
+                    </div>`;
+            }
+        }
+
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Webmin & cPanel/WHM?")) location.reload(); 
+        }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.webminRepoAdded, text: "Repository & Key GPG Webmin Ditambahkan" },
+                { cond: state.webminInstalled, text: "Paket Webmin Terinstal (Port 10000)" },
+                { cond: state.ufwWebminAllowed, text: "UFW Firewall Allow Port 10000/tcp Diaktifkan" },
+                { cond: state.hostnameSet, text: "Hostname FQDN Dikonfigurasi (hostnamectl)" },
+                { cond: state.cpanelInstalled, text: "Skrip cPanel Installer Berhasil Dieksekusi" },
+                { cond: state.webminAccessed || state.whmAccessed, text: "Pengujian Akses Web Dashboard (Webmin / WHM) Berhasil" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-WEBMIN-CPANEL</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Lengkapi langkah konfigurasi yang bertanda silang merah, lalu klik Verify Target kembali.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', () => {
+            cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
+        });
+    </script>
+</body>
+</html>

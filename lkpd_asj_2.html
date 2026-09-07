@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro DHCP Server Simulator (Linux & MikroTik)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+        
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
+            z-index: 30;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-network-wired text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">DHCP Server Simulator</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal CLI
+        </button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[38%] md:min-w-[280px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Melakukan konfigurasi DHCP Server di Linux menggunakan paket <code>isc-dhcp-server</code>.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Menentukan interface jaringan dan parameter pool IP (subnet, range, router, reservation MAC).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Melakukan konfigurasi DHCP Server di Router MikroTik menggunakan wizard interaktif.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memeriksa status service dan tabel sewa IP (leases).</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Bagian A: DHCP Server Linux (Ubuntu/Debian)</h2>
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        
+                        <!-- Langkah 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Install Paket isc-dhcp-server</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install isc-dhcp-server -y</code>
+                                <button onclick="copyCmd('sudo apt install isc-dhcp-server -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+                        
+                        <!-- Langkah 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Tentukan Interface Jaringan</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Edit file <code>/etc/default/isc-dhcp-server</code>:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/default/isc-dhcp-server</code>
+                                <button onclick="copyCmd('sudo nano /etc/default/isc-dhcp-server')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-600 font-medium">Ubah baris interface menjadi:</p>
+                            <code class="block bg-slate-800 text-green-400 p-2 rounded text-xs font-mono my-1">INTERFACESv4="ens33"</code>
+                        </li>
+
+                        <!-- Langkah 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Atur Pool Alamat IP & Parameter</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Edit file utama <code>/etc/dhcp/dhcpd.conf</code>:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/dhcp/dhcpd.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/dhcp/dhcpd.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded text-xs font-mono leading-relaxed overflow-x-auto">subnet 192.168.10.0 netmask 255.255.255.0 {
+  range 192.168.10.50 192.168.10.200;
+  option domain-name-servers 8.8.8.8, 1.1.1.1;
+  option domain-name "skil.local";
+  option routers 192.168.10.1;
+  option broadcast-address 192.168.10.255;
+  default-lease-time 600;
+  max-lease-time 7200;
+}
+
+host Printer-Office {
+  hardware ethernet 00:11:22:33:44:55;
+  fixed-address 192.168.10.25;
+}</pre>
+                        </li>
+
+                        <!-- Langkah 4 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">4. Restart & Uji Status Service</span>
+                            <div class="space-y-1.5">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl restart isc-dhcp-server</code>
+                                    <button onclick="copyCmd('sudo systemctl restart isc-dhcp-server')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl status isc-dhcp-server</code>
+                                    <button onclick="copyCmd('sudo systemctl status isc-dhcp-server')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                    </ol>
+
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 my-4">Bagian B: DHCP Server di Router MikroTik</h2>
+                    <ol class="space-y-4 text-sm text-slate-600 pl-1">
+                        
+                        <!-- MikroTik 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Atur IP Address Interface Router</span>
+                            <p class="text-xs text-slate-500 mb-1.5">Pindah ke tab <strong>[admin@MikroTik]</strong> di sebelah kanan, lalu jalankan:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                <code class="font-mono text-xs text-slate-700">/ip address add address=192.168.20.1/24 interface=ether2</code>
+                                <button onclick="copyCmd('/ip address add address=192.168.20.1/24 interface=ether2')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <!-- MikroTik 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Jalankan DHCP Setup Wizard</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">/ip dhcp-server setup</code>
+                                <button onclick="copyCmd('/ip dhcp-server setup')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-1 font-semibold">Isi parameter wizard berikut saat diminta:</p>
+                            <ul class="list-disc list-inside text-xs text-slate-600 space-y-0.5 bg-slate-50 p-2 rounded border border-slate-200 font-mono">
+                                <li>Interface: ether2</li>
+                                <li>DHCP Address Space: 192.168.20.0/24</li>
+                                <li>Gateway for Network: 192.168.20.1</li>
+                                <li>Addresses to Give Out: 192.168.20.10-192.168.20.100</li>
+                                <li>DNS Servers: 8.8.8.8, 8.8.4.4</li>
+                                <li>Lease Time: 03:00:00</li>
+                            </ul>
+                        </li>
+
+                        <!-- MikroTik 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Cek Daftar Sewa IP (Leases)</span>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                <code class="font-mono text-xs text-slate-700">/ip dhcp-server lease print</code>
+                                <button onclick="copyCmd('/ip dhcp-server lease print')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Jaringan DHCP Server</h2>
+                <div class="flex flex-col items-center gap-3">
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-server text-3xl text-indigo-500 mb-1"></i>
+                        <span class="font-bold text-xs">Linux DHCP Server (isc-dhcp-server)</span>
+                        <code class="text-[11px] text-slate-500 bg-slate-100 px-1 rounded mt-1">IP: 192.168.10.1/24 (ens33)</code>
+                    </div>
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-router text-3xl text-red-500 mb-1"></i>
+                        <span class="font-bold text-xs">MikroTik Router Board</span>
+                        <code class="text-[11px] text-slate-500 bg-slate-100 px-1 rounded mt-1">IP: 192.168.20.1/24 (ether2)</code>
+                    </div>
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-network-wired text-2xl text-slate-400 mb-1"></i>
+                        <span class="font-bold text-xs text-slate-600">Switch / Distribution</span>
+                    </div>
+                    <div class="h-6 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="flex gap-2 w-full justify-center">
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center flex-1 max-w-[130px]">
+                            <i class="fa-solid fa-desktop text-2xl text-green-500 mb-1"></i>
+                            <span class="font-bold text-[11px]">Client PC</span>
+                            <span class="text-[10px] text-slate-400">DHCP Client</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center flex-1 max-w-[130px]">
+                            <i class="fa-solid fa-print text-2xl text-amber-500 mb-1"></i>
+                            <span class="font-bold text-[11px]">Printer-Office</span>
+                            <span class="text-[10px] text-slate-400">192.168.10.25</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist Praktikum</h2>
+                <div class="space-y-2.5">
+                    <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider">A. Linux DHCP Server</p>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_install" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Install isc-dhcp-server</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_interface" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Set INTERFACESv4="ens33" (/etc/default/isc-dhcp-server)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_dhcpd" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Konfigurasi Pool & Reservation (/etc/dhcp/dhcpd.conf)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_restart" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Restart Service isc-dhcp-server</span>
+                    </label>
+
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-wider pt-2">B. MikroTik RouterOS</p>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_mt_ip" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Set IP Address ether2 (192.168.20.1/24)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_mt_setup" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Selesaikan Wizard /ip dhcp-server setup</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_mt_lease" class="w-4 h-4 text-indigo-600 rounded border-slate-300" disabled>
+                        <span class="text-xs font-medium text-slate-700">Cek /ip dhcp-server lease print</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('linux')" id="term-tab-linux" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-brands fa-linux text-indigo-400"></i> root@dhcp-server
+                </button>
+                <button onclick="switchTerminalTab('mikrotik')" id="term-tab-mikrotik" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-router text-red-400"></i> [admin@MikroTik]
+                </button>
+            </div>
+
+            <!-- Terminal Workspace 1: Linux Server -->
+            <div id="terminal-workspace-linux" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="linuxTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux dhcp-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Mon, 07 Sep 2026 13:45:00 WIB</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleLinuxFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@dhcp-server:~#</span>
+                        <input type="text" id="linuxCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /etc/dhcp/dhcpd.conf</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Workspace 2: MikroTik RouterOS -->
+            <div id="terminal-workspace-mikrotik" class="flex-1 flex flex-col relative overflow-hidden hidden bg-[#0f172a]">
+                <div id="mikrotikTerminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-red-400 font-bold">  MikroTik RouterOS 7.12 (c) 1999-2026</div>
+                    <div class="text-slate-500 mt-1 mb-4">  RouterBOARD 951Ui-2HnD - System Ready</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleMikrotikFormSubmit(event)" class="flex items-center gap-2">
+                        <span id="mikrotikPrompt" class="text-[#f43f5e] font-bold font-linux text-[15px] shrink-0">[admin@MikroTik] &gt;</span>
+                        <input type="text" id="mikrotikCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Konfigurasi DHCP</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700"></div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const linuxTerminalOutput = document.getElementById('linuxTerminalOutput');
+        const linuxCmdInput = document.getElementById('linuxCmdInput');
+        const mikrotikTerminalOutput = document.getElementById('mikrotikTerminalOutput');
+        const mikrotikCmdInput = document.getElementById('mikrotikCmdInput');
+        const mikrotikPrompt = document.getElementById('mikrotikPrompt');
+        
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let isNanoOpen = false;
+        let currentFile = "";
+        let fontSizeClass = "text-[15px]";
+
+        // File System Initial State (Linux)
+        const fileSystem = {
+            "/etc/default/isc-dhcp-server": `# Defaults for isc-dhcp-server
+# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+INTERFACESv4=""
+INTERFACESv6=""`,
+            "/etc/dhcp/dhcpd.conf": `# Configuration file for ISC dhcpd
+# Add your subnet and reservation configuration below:`
+        };
+
+        // Lab Progress State
+        let state = { 
+            // Linux
+            linuxInstalled: false, 
+            interfaceConfigured: false, 
+            dhcpdConfigured: false, 
+            linuxRestarted: false,
+            
+            // MikroTik
+            mikrotikIpAdded: false,
+            mikrotikDhcpSetup: false,
+            mikrotikLeasedChecked: false
+        };
+
+        // MikroTik Setup Wizard Flow Tracker
+        let mtWizardStep = 0;
+        const mtWizardPrompts = [
+            "Select interface to run DHCP server on\nDHCP Server Interface: ",
+            "Select network for DHCP addresses\nDHCP Address Space: ",
+            "Select gateway for given network\nGateway for DHCP Network: ",
+            "Select pool of IP addresses given out by DHCP server\nAddresses to Give Out: ",
+            "Select DNS servers\nDNS Servers: ",
+            "Select lease time\nLease Time: "
+        ];
+
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+            }
+        }
+
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Switcher
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'linux') {
+                document.getElementById('terminal-workspace-linux').classList.remove('hidden');
+                document.getElementById('terminal-workspace-mikrotik').classList.add('hidden');
+                document.getElementById('term-tab-linux').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-mikrotik').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                linuxCmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-mikrotik').classList.remove('hidden');
+                document.getElementById('terminal-workspace-linux').classList.add('hidden');
+                document.getElementById('term-tab-mikrotik').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-linux').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                mikrotikCmdInput.focus();
+            }
+        }
+
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            // Linux validation
+            const defaultContent = fileSystem["/etc/default/isc-dhcp-server"] || "";
+            state.interfaceConfigured = defaultContent.includes('INTERFACESv4="ens33"');
+
+            const confContent = fileSystem["/etc/dhcp/dhcpd.conf"] || "";
+            state.dhcpdConfigured = confContent.includes("192.168.10.0") && confContent.includes("192.168.10.50");
+
+            document.getElementById('task_install').checked = state.linuxInstalled;
+            document.getElementById('task_interface').checked = state.interfaceConfigured;
+            document.getElementById('task_dhcpd').checked = state.dhcpdConfigured;
+            document.getElementById('task_restart').checked = state.linuxRestarted;
+
+            // MikroTik validation
+            document.getElementById('task_mt_ip').checked = state.mikrotikIpAdded;
+            document.getElementById('task_mt_setup').checked = state.mikrotikDhcpSetup;
+            document.getElementById('task_mt_lease').checked = state.mikrotikLeasedChecked;
+        }
+
+        function changeFontSize() {
+            linuxTerminalOutput.classList.remove(fontSizeClass);
+            linuxCmdInput.classList.remove(fontSizeClass);
+            mikrotikTerminalOutput.classList.remove(fontSizeClass);
+            mikrotikCmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            linuxTerminalOutput.classList.add(fontSizeClass);
+            linuxCmdInput.classList.add(fontSizeClass);
+            mikrotikTerminalOutput.classList.add(fontSizeClass);
+            mikrotikCmdInput.classList.add(fontSizeClass);
+        }
+
+        // --- LINUX TERMINAL ENGINE ---
+        function handleLinuxFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = linuxCmdInput.value.trim();
+            if(!cmd) return;
+            printToLinuxTerminal(`<span class="text-[#4ade80] font-bold">root@dhcp-server:~#</span> ${cmd}`);
+            linuxCmdInput.value = '';
+            processLinuxCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            if(cmd === 'submit-lab') verifySubmission();
+        }
+
+        function printToLinuxTerminal(html) {
+            linuxTerminalOutput.innerHTML += `<div>${html}</div>`;
+            linuxTerminalOutput.scrollTop = linuxTerminalOutput.scrollHeight;
+        }
+
+        function processLinuxCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
+            const baseCmd = args[0];
+
+            if(cleanCmd === 'apt update') { 
+                printToLinuxTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); 
+            } 
+            else if(cleanCmd.includes('apt install isc-dhcp-server')) { 
+                state.linuxInstalled = true; 
+                printToLinuxTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed: isc-dhcp-server\nSetting up isc-dhcp-server (4.4.3-P1)..."); 
+                updateTasks(); 
+            }
+            else if(baseCmd === 'nano') { 
+                if(args[1]) openNano(args[1]); 
+            }
+            else if(cleanCmd.includes('systemctl restart isc-dhcp-server')) { 
+                if(!state.linuxInstalled) {
+                    printToLinuxTerminal("<span class='text-red-400'>Failed to restart isc-dhcp-server.service: Unit not found.</span>");
+                } else if(!state.interfaceConfigured) {
+                    printToLinuxTerminal("<span class='text-red-400'>Job for isc-dhcp-server.service failed: INTERFACESv4 is empty in /etc/default/isc-dhcp-server.</span>");
+                } else {
+                    state.linuxRestarted = true; 
+                    printToLinuxTerminal("<span class='text-green-400'>[ OK ] Restarted isc-dhcp-server.service - ISC DHCP Server.</span>"); 
+                    updateTasks();
+                }
+            }
+            else if(cleanCmd.includes('systemctl status isc-dhcp-server')) {
+                const statusStr = state.linuxRestarted ? 
+                    "<span class='text-green-400'>● isc-dhcp-server.service - ISC DHCP Server\n   Loaded: loaded (/lib/systemd/system/isc-dhcp-server.service; enabled)\n   Active: active (running) since Mon 2026-09-07 13:50:00 WIB</span>" :
+                    "<span class='text-amber-400'>● isc-dhcp-server.service - ISC DHCP Server\n   Active: inactive (dead)</span>";
+                printToLinuxTerminal(statusStr);
+            }
+            else if(cmd === 'clear') { linuxTerminalOutput.innerHTML = ''; }
+            else { printToLinuxTerminal(`bash: ${args[0]}: command not found`); }
+        }
+
+        // --- MIKROTIK TERMINAL ENGINE ---
+        function handleMikrotikFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = mikrotikCmdInput.value.trim();
+            
+            if(mtWizardStep > 0) {
+                printToMikrotikTerminal(`<span class="text-slate-400">${cmd}</span>`);
+                mikrotikCmdInput.value = '';
+                processMikrotikWizard(cmd);
+                return;
+            }
+
+            if(!cmd) return;
+            printToMikrotikTerminal(`<span class="text-[#f43f5e] font-bold">[admin@MikroTik] &gt;</span> ${cmd}`);
+            mikrotikCmdInput.value = '';
+            processMikrotikCommand(cmd);
+        }
+
+        function printToMikrotikTerminal(html) {
+            mikrotikTerminalOutput.innerHTML += `<div>${html}</div>`;
+            mikrotikTerminalOutput.scrollTop = mikrotikTerminalOutput.scrollHeight;
+        }
+
+        function processMikrotikCommand(cmd) {
+            const cleanCmd = cmd.replace(/^\//, '').trim();
+
+            if(cleanCmd === 'ip address add address=192.168.20.1/24 interface=ether2') {
+                state.mikrotikIpAdded = true;
+                printToMikrotikTerminal("<span class='text-slate-300'>[admin@MikroTik] address added.</span>");
+                updateTasks();
+            }
+            else if(cleanCmd === 'ip dhcp-server setup') {
+                mtWizardStep = 1;
+                mikrotikPrompt.innerHTML = "DHCP Server Interface: ";
+                printToMikrotikTerminal("<span class='text-cyan-400'>Select interface to run DHCP server on</span>");
+            }
+            else if(cleanCmd === 'ip dhcp-server lease print') {
+                state.mikrotikLeasedChecked = true;
+                printToMikrotikTerminal(`Flags: X - disabled, R - RADIUS, D - dynamic, B - blocked 
+ #   ADDRESS            MAC-ADDRESS       HOST-NAME       SERVER
+ 0 D 192.168.20.10      00:0C:29:1A:2B:3C Client-PC1      dhcp1
+ 1 D 192.168.20.11      00:0C:29:4D:5E:6F Laptop-Admin    dhcp1`);
+                updateTasks();
+            }
+            else if(cleanCmd === 'clear') { mikrotikTerminalOutput.innerHTML = ''; }
+            else { printToMikrotikTerminal(`<span class='text-amber-400'>bad command name ${cmd} (line 1 column 1)</span>`); }
+        }
+
+        function processMikrotikWizard(input) {
+            mtWizardStep++;
+            if(mtWizardStep <= 6) {
+                const promptTitles = [
+                    "",
+                    "Select network for DHCP addresses\nDHCP Address Space: ",
+                    "Select gateway for given network\nGateway for DHCP Network: ",
+                    "Select pool of IP addresses given out by DHCP server\nAddresses to Give Out: ",
+                    "Select DNS servers\nDNS Servers: ",
+                    "Select lease time\nLease Time: "
+                ];
+                mikrotikPrompt.innerHTML = promptTitles[mtWizardStep].split('\n')[1] || " ";
+                printToMikrotikTerminal(`<span class='text-cyan-400'>${promptTitles[mtWizardStep].split('\n')[0]}</span>`);
+            } else {
+                state.mikrotikDhcpSetup = true;
+                mtWizardStep = 0;
+                mikrotikPrompt.innerHTML = "[admin@MikroTik] &gt;";
+                printToMikrotikTerminal("<span class='text-green-400'>dhcp-server setup completed successfully!</span>");
+                updateTasks();
+            }
+        }
+
+        // Nano Editor Functions
+        function openNano(file) {
+            isNanoOpen = true; 
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            printToLinuxTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            linuxCmdInput.focus();
+        }
+
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum DHCP Server?")) location.reload(); 
+        }
+
+        // Modal Verification
+        function verifySubmission() {
+            updateTasks();
+            let html = "<ul class='space-y-2 text-xs font-mono'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.linuxInstalled, text: "Linux: Paket isc-dhcp-server Terinstal" },
+                { cond: state.interfaceConfigured, text: "Linux: INTERFACESv4='ens33' Dikonfigurasi" },
+                { cond: state.dhcpdConfigured, text: "Linux: Pool Subnet & Reservation Dikonfigurasi" },
+                { cond: state.linuxRestarted, text: "Linux: Service isc-dhcp-server Aktif" },
+                { cond: state.mikrotikIpAdded, text: "MikroTik: IP Interface ether2 Ditambahkan" },
+                { cond: state.mikrotikDhcpSetup, text: "MikroTik: /ip dhcp-server setup Selesai" },
+                { cond: state.mikrotikLeasedChecked, text: "MikroTik: Verifikasi /ip dhcp-server lease print" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-DHCP2026</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Lengkapi langkah konfigurasi pada Linux maupun MikroTik yang masih bertanda silang merah.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+        }
+
+        document.getElementById('terminal-workspace-linux').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') linuxCmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-mikrotik').addEventListener('click', () => {
+            mikrotikCmdInput.focus();
+        });
+    </script>
+</body>
+</html>

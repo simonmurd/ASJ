@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pro Mail Server Simulator (Postfix & Dovecot)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+        
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
+            z-index: 30;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-envelope-open-text text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">Mail Server (Postfix & Dovecot)</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Layar Kecil (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal & Client
+        </button>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[38%] md:min-w-[280px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memasang Postfix (SMTP) dan Dovecot (POP3/IMAP) pada Linux.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengonfigurasi parameter domain dan direktori <code>Maildir/</code> pada Postfix.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengaktifkan protokol serta otentikasi Dovecot ke Postfix.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Memahami kebutuhan DNS Record (A, MX, dan SPF Record) untuk Mail Server.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Langkah Konfigurasi</h2>
+                    <ol class="space-y-6 text-sm text-slate-600 pl-1">
+                        
+                        <!-- Langkah 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Update & Install Package Mail Server</span>
+                            <p class="text-xs text-slate-500 mb-2">Memasang Postfix dan Dovecot. Jalankan perintah berikut pada terminal server Anda:</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install postfix dovecot-imapd dovecot-pop3d -y</code>
+                                <button onclick="copyCmd('sudo apt install postfix dovecot-imapd dovecot-pop3d -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded"><strong>Catatan:</strong> Saat instalasi Postfix, pilih <em>Internet Site</em> dan masukkan FQDN domain Anda (contoh: <code>mail.domainanda.com</code>).</p>
+                        </li>
+                        
+                        <!-- Langkah 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Konfigurasi Postfix (SMTP)</span>
+                            <p class="text-xs text-slate-500 mb-2">Edit file <code>/etc/postfix/main.cf</code>. Buka file konfigurasi utama dan sesuaikan parameter berikut:</p>
+                            
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/postfix/main.cf</code>
+                                <button onclick="copyCmd('sudo nano /etc/postfix/main.cf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+
+                            <pre class="bg-slate-800 text-slate-200 p-3 rounded-md text-xs font-mono leading-relaxed overflow-x-auto mb-2">myhostname = mail.domainanda.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mydestination = $myhostname, domainanda.com, localhost.domainanda.com, localhost
+relayhost = 
+mynetworks = 127.0.0.0/8 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+inet_protocols = all
+
+# Format direktori penyimpanan pesan
+home_mailbox = Maildir/</pre>
+                        </li>
+
+                        <!-- Langkah 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Konfigurasi Dovecot (POP3 & IMAP)</span>
+                            <p class="text-xs text-slate-500 mb-2">Edit <code>/etc/dovecot/dovecot.conf</code> dan file pendukung.</p>
+                            
+                            <p class="text-xs text-slate-700 font-semibold mb-1">A. Aktifkan protokol di <code>/etc/dovecot/dovecot.conf</code>:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/dovecot/dovecot.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/dovecot/dovecot.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded text-xs font-mono mb-3">protocols = imap pop3 lmtp</pre>
+
+                            <p class="text-xs text-slate-700 font-semibold mb-1">B. Samakan direktori penyimpanan di <code>/etc/dovecot/conf.d/10-mail.conf</code>:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/dovecot/conf.d/10-mail.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/dovecot/conf.d/10-mail.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded text-xs font-mono mb-3">mail_location = maildir:~/Maildir</pre>
+
+                            <p class="text-xs text-slate-700 font-semibold mb-1">C. Aktifkan autentikasi pengiriman melalui Postfix di <code>/etc/dovecot/conf.d/10-master.conf</code>:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/dovecot/conf.d/10-master.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/dovecot/conf.d/10-master.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded text-xs font-mono mb-2">unix_listener /var/spool/postfix/private/auth {
+  mode = 0666
+  user = postfix
+  group = postfix
+}</pre>
+                        </li>
+
+                        <!-- Langkah 4 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">4. Restart Service & Uji Koneksi</span>
+                            <p class="text-xs text-slate-500 mb-2">Jalankan kembali kedua layanan untuk menerapkan konfigurasi:</p>
+                            
+                            <div class="space-y-1.5 mb-2">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl restart postfix dovecot</code>
+                                    <button onclick="copyCmd('sudo systemctl restart postfix dovecot')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl enable postfix dovecot</code>
+                                    <button onclick="copyCmd('sudo systemctl enable postfix dovecot')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- DNS Record -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-2">5. Konfigurasi DNS Record (Wajib)</span>
+                            <p class="text-xs text-slate-500 mb-2">Agar email tidak masuk ke folder SPAM atau ditolak server tujuan, buat record berikut di DNS Management Anda:</p>
+                            <div class="bg-slate-50 border border-slate-200 p-3 rounded-md text-xs font-mono space-y-1 text-slate-700">
+                                <div><strong class="text-indigo-600">A Record:</strong> mail.domainanda.com -&gt; IP_Server_Anda</div>
+                                <div><strong class="text-indigo-600">MX Record:</strong> domainanda.com -&gt; mail.domainanda.com (Priority: 10)</div>
+                                <div><strong class="text-indigo-600">TXT (SPF):</strong> "v=spf1 mx ~all"</div>
+                            </div>
+                        </li>
+
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi & Alur Kerja Mail Server</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm">Postfix & Dovecot Server</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">mail.domainanda.com</code>
+                        <span class="text-[10px] text-slate-400 mt-0.5">SMTP: 25 | IMAP: 143 | POP3: 110</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Network / DNS Resolver</span>
+                        <span class="text-[10px] text-slate-400">MX Record: domainanda.com</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-laptop text-4xl text-green-500 mb-2"></i>
+                        <span class="font-bold text-sm">Mail Client (User PC)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">Thunderbird / Webmail</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_install" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Install Postfix & Dovecot Packages</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_postfix" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi main.cf (home_mailbox = Maildir/)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_dovecot_conf" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Set Protocols di dovecot.conf (imap pop3 lmtp)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_dovecot_mail" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Set mail_location di 10-mail.conf (maildir:~/Maildir)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_dovecot_auth" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Set unix_listener Auth di 10-master.conf</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_restart" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Restart & Enable Service Postfix & Dovecot</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal Simulator -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal / Client Tabs -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <button onclick="switchTerminalTab('server')" id="term-tab-server" class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@mail-server
+                </button>
+                <button onclick="switchTerminalTab('client')" id="term-tab-client" class="px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2">
+                    <i class="fa-solid fa-vial text-green-400"></i> Uji Koneksi / Port Test
+                </button>
+            </div>
+
+            <!-- Terminal Workspace: Server -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux mail-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Mon, 07 Sep 2026 09:00:00 WIB from 192.168.1.50</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@mail-server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /etc/postfix/main.cf</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client / Testing Workspace -->
+            <div id="terminal-workspace-client" class="flex-1 flex flex-col relative overflow-hidden hidden bg-slate-900 p-4 font-linux text-sm">
+                <div id="clientOutput" class="flex-grow overflow-y-auto text-slate-300 space-y-2 pb-4">
+                    <p class="text-slate-400">💡 <i>Lakukan pengujian Port / Koneksi ke Mail Server di sini.</i></p>
+                    <p class="text-xs text-slate-500">Perintah yang dapat digunakan: <code>nc -zv mail.domainanda.com 25</code> atau <code>telnet mail.domainanda.com 110</code></p>
+                </div>
+                <form onsubmit="handleClientFormSubmit(event)" class="flex items-center gap-2 border-t border-slate-800 pt-3">
+                    <span class="text-[#3b82f6] font-bold shrink-0">siswa@client-pc:~$</span>
+                    <input type="text" id="clientCmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 focus:outline-none">
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Mail Server</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const terminalOutput = document.getElementById('terminalOutput');
+        const cmdInput = document.getElementById('cmdInput');
+        const clientOutput = document.getElementById('clientOutput');
+        const clientCmdInput = document.getElementById('clientCmdInput');
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let isNanoOpen = false;
+        let currentFile = "";
+        let fontSizeClass = "text-[15px]";
+
+        // Default Config Files
+        const defaultPostfixMain = `myhostname = mail.domainanda.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mydestination = $myhostname, domainanda.com, localhost.domainanda.com, localhost
+relayhost = 
+mynetworks = 127.0.0.0/8 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+inet_protocols = all
+
+# Format direktori penyimpanan pesan
+# home_mailbox = Maildir/`;
+
+        const defaultDovecotConf = `# Protocols enabled
+# protocols = imap pop3 lmtp`;
+
+        const defaultDovecotMail = `# Mail location
+# mail_location = maildir:~/Maildir`;
+
+        const defaultDovecotMaster = `# Postfix smtp-auth
+# unix_listener /var/spool/postfix/private/auth {
+#   mode = 0666
+#   user = postfix
+#   group = postfix
+# }`;
+
+        // Virtual File System
+        const fileSystem = {
+            "/etc/postfix/main.cf": defaultPostfixMain,
+            "/etc/dovecot/dovecot.conf": defaultDovecotConf,
+            "/etc/dovecot/conf.d/10-mail.conf": defaultDovecotMail,
+            "/etc/dovecot/conf.d/10-master.conf": defaultDovecotMaster
+        };
+
+        let state = { 
+            mailInstalled: false, 
+            postfixConfigured: false, 
+            dovecotProtocolsConfigured: false,
+            dovecotMailConfigured: false,
+            dovecotAuthConfigured: false,
+            servicesRestarted: false
+        };
+
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                
+                setTimeout(() => {
+                    const isServerActive = !document.getElementById('terminal-workspace-server').classList.contains('hidden');
+                    if (isServerActive) {
+                        document.getElementById('cmdInput').focus();
+                    } else {
+                        document.getElementById('clientCmdInput').focus();
+                    }
+                }, 100);
+            }
+        }
+
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        function switchTerminalTab(tabName) {
+            if(tabName === 'server') {
+                document.getElementById('terminal-workspace-server').classList.remove('hidden');
+                document.getElementById('terminal-workspace-client').classList.add('hidden');
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                cmdInput.focus();
+            } else {
+                document.getElementById('terminal-workspace-client').classList.remove('hidden');
+                document.getElementById('terminal-workspace-server').classList.add('hidden');
+                document.getElementById('term-tab-client').className = "px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2";
+                document.getElementById('term-tab-server').className = "px-4 py-2 bg-[#0f172a] text-slate-500 hover:text-slate-300 font-mono text-xs rounded-t-lg border border-transparent flex items-center gap-2";
+                clientCmdInput.focus();
+            }
+        }
+
+        // Copy Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            // Install check
+            document.getElementById('task_install').checked = state.mailInstalled;
+
+            // Postfix check (home_mailbox = Maildir/)
+            const postfixMain = fileSystem["/etc/postfix/main.cf"] || "";
+            state.postfixConfigured = postfixMain.includes("home_mailbox = Maildir/");
+            document.getElementById('task_postfix').checked = state.postfixConfigured;
+
+            // Dovecot protocols
+            const dovecotConf = fileSystem["/etc/dovecot/dovecot.conf"] || "";
+            state.dovecotProtocolsConfigured = dovecotConf.includes("protocols = imap pop3 lmtp");
+            document.getElementById('task_dovecot_conf').checked = state.dovecotProtocolsConfigured;
+
+            // Dovecot mail location
+            const dovecotMail = fileSystem["/etc/dovecot/conf.d/10-mail.conf"] || "";
+            state.dovecotMailConfigured = dovecotMail.includes("mail_location = maildir:~/Maildir");
+            document.getElementById('task_dovecot_mail').checked = state.dovecotMailConfigured;
+
+            // Dovecot unix_listener auth
+            const dovecotMaster = fileSystem["/etc/dovecot/conf.d/10-master.conf"] || "";
+            state.dovecotAuthConfigured = dovecotMaster.includes("unix_listener /var/spool/postfix/private/auth") && 
+                                           dovecotMaster.includes("mode = 0666") && 
+                                           dovecotMaster.includes("user = postfix");
+            document.getElementById('task_dovecot_auth').checked = state.dovecotAuthConfigured;
+
+            // Service restart
+            document.getElementById('task_restart').checked = state.servicesRestarted;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd) return;
+            printToTerminal(`<span class="text-[#4ade80] font-bold">root@mail-server:~#</span> ${cmd}`);
+            cmdInput.value = '';
+            processCommand(cmd);
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
+        }
+
+        function printToTerminal(html) {
+            terminalOutput.innerHTML += `<div>${html}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
+            const baseCmd = args[0];
+
+            if(cleanCmd === 'apt update') { 
+                printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); 
+            } 
+            else if(cleanCmd.includes('apt install') && cleanCmd.includes('postfix') && cleanCmd.includes('dovecot')) { 
+                state.mailInstalled = true; 
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nSetting up postfix (3.7.11)...\nConfiguring Postfix (Internet Site, mail.domainanda.com)...\nSetting up dovecot-imapd & dovecot-pop3d...\nProcessing triggers for systemd..."); 
+                updateTasks(); 
+            }
+            else if(cleanCmd === 'systemctl status postfix' || cleanCmd === 'systemctl status dovecot') {
+                const statusStr = state.mailInstalled ? 
+                    `<span class='text-green-400'>● ${args[2]}.service - Mail Server Service\n   Loaded: loaded (/lib/systemd/system/${args[2]}.service; enabled)\n   Active: active (running)</span>` :
+                    `Unit ${args[2]}.service could not be found.`;
+                printToTerminal(statusStr);
+            }
+            else if(baseCmd === 'nano') { 
+                if(args[1]) openNano(args[1]); 
+            }
+            else if(cleanCmd.includes('systemctl restart postfix dovecot') || cleanCmd.includes('systemctl restart dovecot postfix')) { 
+                state.servicesRestarted = true; 
+                printToTerminal("<span class='text-green-400'>[ OK ] Restarted Postfix SMTP Service\n[ OK ] Restarted Dovecot IMAP/POP3 Service</span>"); 
+                updateTasks(); 
+            }
+            else if(cleanCmd.includes('systemctl enable postfix dovecot') || cleanCmd.includes('systemctl enable dovecot postfix')) {
+                printToTerminal("Synchronizing state of postfix.service & dovecot.service with SysV service script...");
+            }
+            else if(cmd === 'submit-lab') { verifySubmission(); }
+            else if(cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${args[0]}: command not found`); }
+            
+            if(!isNanoOpen) cmdInput.focus();
+        }
+
+        // Client Terminal
+        function handleClientFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = clientCmdInput.value.trim();
+            if(!cmd) return;
+            printToClientTerminal(`<span class="text-[#3b82f6] font-bold">siswa@client-pc:~$</span> ${cmd}`);
+            clientCmdInput.value = '';
+
+            if (cmd.includes('25') || cmd.includes('smtp')) {
+                if(state.mailInstalled && state.servicesRestarted && state.postfixConfigured) {
+                    printToClientTerminal("<span class='text-green-400'>Connection to mail.domainanda.com 25 port [tcp/smtp] succeeded!</span>\n220 mail.domainanda.com ESMTP Postfix");
+                } else {
+                    printToClientTerminal("<span class='text-red-400'>nc: connect to mail.domainanda.com port 25 (tcp) failed: Connection refused</span>");
+                }
+            } else if (cmd.includes('110') || cmd.includes('143') || cmd.includes('pop3') || cmd.includes('imap')) {
+                if(state.mailInstalled && state.servicesRestarted && state.dovecotProtocolsConfigured) {
+                    printToClientTerminal("<span class='text-green-400'>Connection to mail.domainanda.com succeeded!</span>\n+OK Dovecot ready.");
+                } else {
+                    printToClientTerminal("<span class='text-red-400'>nc: connect to mail.domainanda.com port failed: Connection refused</span>");
+                }
+            } else {
+                printToClientTerminal(`Perintah '${cmd}' tidak dikenali. Coba gunakan: <code>nc -zv mail.domainanda.com 25</code>`);
+            }
+        }
+
+        function printToClientTerminal(html) {
+            clientOutput.innerHTML += `<div class="mb-2">${html}</div>`;
+            clientOutput.scrollTop = clientOutput.scrollHeight;
+        }
+
+        // Nano Editor
+        function openNano(file) {
+            isNanoOpen = true; 
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            cmdInput.focus();
+        }
+        
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum Mail Server?")) location.reload(); 
+        }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            updateTasks();
+            
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.mailInstalled, text: "Paket Postfix & Dovecot Terinstal" },
+                { cond: state.postfixConfigured, text: "Postfix configured (home_mailbox = Maildir/)" },
+                { cond: state.dovecotProtocolsConfigured, text: "Dovecot protocols = imap pop3 lmtp" },
+                { cond: state.dovecotMailConfigured, text: "Dovecot mail_location = maildir:~/Maildir" },
+                { cond: state.dovecotAuthConfigured, text: "Dovecot unix_listener auth di /etc/dovecot/conf.d/10-master.conf" },
+                { cond: state.servicesRestarted, text: "Service Postfix & Dovecot Direstart" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Mail Server Berhasil!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">MAIL-PRO-POSTFIX-DOVECOT</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Silakan lengkapi langkah konfigurasi yang bertanda silang merah, lalu klik Verify Target kembali.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+
+        document.getElementById('terminal-workspace-client').addEventListener('click', () => {
+            clientCmdInput.focus();
+        });
+    </script>
+</body>
+</html>

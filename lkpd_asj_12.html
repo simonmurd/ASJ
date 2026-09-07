@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Simulator Monitoring Jaringan: SNMP, Cacti, & Nagios Core</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            touch-action: manipulation;
+        }
+        .font-linux { font-family: 'Ubuntu Mono', monospace; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        #resizer { cursor: col-resize; }
+        
+        #nanoEditor {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-color: #0f172a;
+            z-index: 30;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased h-[100dvh] flex flex-col overflow-hidden selection:bg-blue-200 selection:text-blue-900">
+
+    <!-- Navbar / Header Menu -->
+    <header class="bg-[#0f172a] text-slate-200 px-4 py-3 flex items-center justify-between shrink-0 border-b border-slate-700 z-20">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-chart-line text-indigo-500"></i>
+            <span class="font-bold tracking-wide">CyberLab Pro</span>
+            <span class="bg-indigo-600/30 text-indigo-300 px-2 py-0.5 rounded text-xs border border-indigo-500/50">SNMP, Cacti & Nagios</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="changeFontSize()" class="hover:bg-slate-800 p-2 rounded transition-colors" title="Ubah Ukuran Font Terminal">
+                <i class="fa-solid fa-text-height"></i>
+            </button>
+            <button onclick="resetLab()" class="hover:bg-slate-800 p-2 rounded transition-colors text-red-400" title="Reset Lab">
+                <i class="fa-solid fa-power-off"></i> Reset
+            </button>
+            <button onclick="submitFormTrigger('submit-lab')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-lg transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-check-double"></i> Verify Target
+            </button>
+        </div>
+    </header>
+
+    <!-- Switcher Khusus Layar Kecil / HP (< 768px) -->
+    <div class="flex md:hidden bg-slate-900 border-b border-slate-700 shrink-0">
+        <button onclick="setMobileView('left')" id="btn-mob-left" class="flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Panduan & Tugas
+        </button>
+        <button onclick="setMobileView('right')" id="btn-mob-right" class="flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-terminal"></i> Terminal Console
+        </button>
+    </div>
+
+    <!-- Main Workspace (Split Screen di PC, Tabbed di HP) -->
+    <div class="flex flex-1 overflow-hidden relative flex-col md:flex-row">
+        
+        <!-- Left Panel: Context & Instructions -->
+        <div id="left-panel" class="bg-white flex flex-col w-full md:w-[42%] md:min-w-[320px] h-full">
+            
+            <!-- Left Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchLeftTab('guide')" id="tab-guide" class="flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors">Panduan</button>
+                <button onclick="switchLeftTab('topology')" id="tab-topology" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Topologi</button>
+                <button onclick="switchLeftTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Tasks</button>
+            </div>
+
+            <!-- Tab Content: Guide -->
+            <div id="content-guide" class="flex-1 overflow-y-auto custom-scroll p-5 space-y-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Tujuan Praktikum</h2>
+                    <ul class="space-y-1.5 text-sm text-slate-600 pl-3">
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mengonfigurasi agen SNMP pada perangkat target (Managed Node).</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Menginstal LAMP Stack, membuat Database Cacti, serta mengonfigurasi Poller Cron Job.</li>
+                        <li><i class="fa-solid fa-caret-right text-indigo-500 mr-1"></i> Mendefinisikan Host & Service Monitoring pada Nagios Core serta memverifikasi konfigurasi.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 border-l-4 border-indigo-500 pl-2 mb-3">Instruksi Langkah Demi Langkah</h2>
+                    <ol class="space-y-5 text-sm text-slate-600 pl-1">
+                        
+                        <!-- Langkah 1 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">1. Konfigurasi SNMP pada Perangkat Target</span>
+                            <p class="text-xs text-slate-500 mb-2">Sebelum dipantau Cacti/Nagios, aktifkan service SNMP pada Linux Server target:</p>
+                            
+                            <p class="text-xs font-semibold text-slate-700 mb-1">A. Edit Konfigurasi SNMP Linux Server:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/snmp/snmpd.conf</code>
+                                <button onclick="copyCmd('sudo nano /etc/snmp/snmpd.conf')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-600 mb-1 font-semibold">Tambahkan/sesuaikan baris berikut:</p>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded-md text-xs font-mono mb-2">rocommunity public-monitoring 192.168.1.0/24
+agentaddress udp:161</pre>
+                            
+                            <p class="text-xs font-semibold text-slate-700 mb-1">B. Restart Service SNMP:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2">
+                                <code class="font-mono text-xs text-slate-700">sudo systemctl restart snmpd</code>
+                                <button onclick="copyCmd('sudo systemctl restart snmpd')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                        </li>
+
+                        <!-- Langkah 2 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">2. Instalasi & Konfigurasi Cacti (Ubuntu Server)</span>
+                            <p class="text-xs text-slate-500 mb-2">A. Install Dependency & Web Server LAMP Stack:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo apt update</code>
+                                <button onclick="copyCmd('sudo apt update')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-2 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install apache2 mariadb-server php php-mysql php-snmp php-xml php-mbstring php-gd php-gmp rrdtool snmp snmpd -y</code>
+                                <button onclick="copyCmd('sudo apt install apache2 mariadb-server php php-mysql php-snmp php-xml php-mbstring php-gd php-gmp rrdtool snmp snmpd -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+
+                            <p class="text-xs text-slate-500 mb-1">B. Konfigurasi Database Cacti di MariaDB:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo mysql</code>
+                                <button onclick="copyCmd('sudo mysql')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded-md text-xs font-mono leading-relaxed mb-2">CREATE DATABASE cacti DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+GRANT ALL PRIVILEGES ON cacti.* TO 'cactiuser'@'localhost' IDENTIFIED BY 'PasswordKuat123!';
+FLUSH PRIVILEGES;
+EXIT;</pre>
+
+                            <p class="text-xs text-slate-500 mb-1">C. Install Package Cacti & Set Cron Job Poller:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo apt install cacti -y</code>
+                                <button onclick="copyCmd('sudo apt install cacti -y')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-1">Buka file cron Cacti:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-1.5">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /etc/cron.d/cacti</code>
+                                <button onclick="copyCmd('sudo nano /etc/cron.d/cacti')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-1 font-semibold">Pastikan isinya:</p>
+                            <pre class="bg-slate-800 text-slate-200 p-2 rounded-md text-xs font-mono mb-2">*/5 * * * * www-data php /usr/share/cacti/site/poller.php > /dev/null 2>&1</pre>
+                        </li>
+
+                        <!-- Langkah 3 -->
+                        <li>
+                            <span class="font-bold text-slate-800 block mb-1">3. Konfigurasi Host Monitoring di Nagios Core</span>
+                            <p class="text-xs text-slate-500 mb-2">A. Tambahkan objek host pada file konfigurasi Nagios:</p>
+                            <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5 mb-2">
+                                <code class="font-mono text-xs text-slate-700">sudo nano /usr/local/nagios/etc/objects/hosts.cfg</code>
+                                <button onclick="copyCmd('sudo nano /usr/local/nagios/etc/objects/hosts.cfg')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                            </div>
+                            <pre class="bg-slate-800 text-slate-200 p-2.5 rounded-md text-xs font-mono leading-relaxed mb-2">define host {
+    use                     generic-switch
+    host_name               Router-Core
+    alias                   MikroTik Core Office
+    address                 192.168.1.1
+    hostgroups              switches
+    check_command           check-host-alive
+    max_check_attempts      5
+    check_interval          1
+    notification_interval   30
+    notification_period     24x7
+}
+
+define service {
+    use                     generic-service
+    host_name               Router-Core
+    service_description     PING Status
+    check_command           check_ping!100.0,20%!500.0,60%
+}</pre>
+                            <p class="text-xs text-slate-500 mb-1">B. Validasi Konfigurasi & Restart Nagios Service:</p>
+                            <div class="space-y-1.5">
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo nagios -v /usr/local/nagios/etc/nagios.cfg</code>
+                                    <button onclick="copyCmd('sudo nagios -v /usr/local/nagios/etc/nagios.cfg')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                                <div class="bg-slate-100 rounded border border-slate-200 flex justify-between items-center px-3 py-1.5">
+                                    <code class="font-mono text-xs text-slate-700">sudo systemctl restart nagios</code>
+                                    <button onclick="copyCmd('sudo systemctl restart nagios')" class="text-slate-400 hover:text-indigo-600"><i class="fa-regular fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </li>
+
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab Content: Topology -->
+            <div id="content-topology" class="flex-1 overflow-y-auto custom-scroll p-5 hidden bg-slate-50">
+                <h2 class="text-base font-bold text-slate-800 mb-6 text-center">Topologi Sistem Monitoring Jaringan</h2>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-server text-4xl text-indigo-500 mb-2"></i>
+                        <span class="font-bold text-sm text-center">Monitoring Server (Cacti & Nagios Core)</span>
+                        <code class="text-xs text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.100</code>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full max-w-[240px]">
+                        <i class="fa-solid fa-network-wired text-3xl text-slate-400 mb-2"></i>
+                        <span class="font-bold text-sm text-slate-600">Network Subnet (192.168.1.0/24)</span>
+                    </div>
+                    <div class="h-8 border-l-2 border-dashed border-slate-400"></div>
+                    <div class="grid grid-cols-2 gap-3 w-full max-w-[340px]">
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                            <i class="fa-solid fa-router text-3xl text-green-500 mb-2"></i>
+                            <span class="font-bold text-xs text-center">Router-Core (MikroTik)</span>
+                            <code class="text-[11px] text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.1</code>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                            <i class="fa-solid fa-hard-drive text-3xl text-blue-500 mb-2"></i>
+                            <span class="font-bold text-xs text-center">Linux Target Node</span>
+                            <code class="text-[11px] text-slate-500 bg-slate-100 px-1 rounded mt-1">192.168.1.10</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Tasks -->
+            <div id="content-tasks" class="flex-1 overflow-y-auto custom-scroll p-5 hidden">
+                <h2 class="text-base font-bold text-slate-800 mb-4">Progress Checklist Monitoring</h2>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_snmp" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi Service SNMP Target (/etc/snmp/snmpd.conf)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_lamp" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Instalasi LAMP Stack & Package Cacti</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_db" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi Database Cacti (MariaDB)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_cron" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Konfigurasi Cron Job Poller Cacti (/etc/cron.d/cacti)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="task_nagios" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" disabled>
+                        <span class="text-sm font-medium text-slate-700">Definisi Host Router-Core & Service PING di Nagios Core</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Draggable Resizer (Hanya Tampil di Tablet/Desktop) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-300 hover:bg-blue-400 transition-colors flex-col justify-center items-center group relative z-10">
+            <div class="h-8 w-1 bg-slate-400 group-hover:bg-blue-600 rounded-full"></div>
+        </div>
+
+        <!-- Right Panel: Interactive Terminal Simulator -->
+        <div id="right-panel" class="hidden md:flex flex-1 bg-[#1e293b] flex-col min-w-[300px] h-full">
+            
+            <!-- Terminal Header -->
+            <div class="flex bg-[#0f172a] shrink-0 border-b border-slate-700 px-2 pt-2 gap-1">
+                <div class="px-4 py-2 bg-[#1e293b] text-slate-200 font-mono text-xs rounded-t-lg border-t border-l border-r border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-indigo-400"></i> root@monitoring-server
+                </div>
+            </div>
+
+            <!-- Terminal Workspace -->
+            <div id="terminal-workspace-server" class="flex-1 flex flex-col relative overflow-hidden">
+                <div id="terminalOutput" class="flex-grow p-4 overflow-y-auto terminal-scroll font-linux text-[15px] leading-relaxed text-slate-300 whitespace-pre-wrap pb-12">
+                    <div class="text-slate-400 font-bold">Linux monitoring-server 6.1.0-11-amd64 Debian 12 (GNU/Linux)</div>
+                    <div class="text-slate-500 mt-1 mb-4">Last login: Mon, 07 Sep 2026 13:40:00 WIB</div>
+                </div>
+
+                <div class="p-3 bg-[#1e293b] shrink-0 absolute bottom-0 left-0 right-0 z-20 border-t border-slate-800">
+                    <form onsubmit="handleFormSubmit(event)" class="flex items-center gap-2">
+                        <span id="promptLabel" class="text-[#4ade80] font-bold font-linux text-[15px] shrink-0">root@monitoring-server:~#</span>
+                        <input type="text" id="cmdInput" autocomplete="off" spellcheck="false" class="flex-grow bg-transparent text-slate-200 font-linux text-[15px] focus:outline-none" autofocus>
+                    </form>
+                </div>
+
+                <!-- Nano Editor Overlay -->
+                <div id="nanoEditor" class="font-linux text-sm flex flex-col h-full w-full pb-[45px]"> 
+                    <div class="bg-slate-200 text-black px-2 py-1 flex justify-between items-center shrink-0">
+                        <span class="font-bold text-xs">GNU nano 6.2</span>
+                        <span id="nanoTitle" class="text-xs truncate text-center">File: /etc/snmp/snmpd.conf</span>
+                        <div class="w-20"></div>
+                    </div>
+                    <textarea id="nanoTextarea" class="flex-grow bg-[#0f172a] text-slate-200 p-3 outline-none resize-none font-linux text-sm leading-relaxed" spellcheck="false"></textarea>
+                    <div class="bg-[#182132] border-t border-slate-700 p-2 flex gap-2 shrink-0">
+                        <button type="button" onclick="saveAndExitNano()" class="bg-green-600 hover:bg-green-500 text-white py-1 px-3 rounded text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i> Simpan & Keluar (Ctrl+O & Ctrl+X)</button>
+                        <button type="button" onclick="closeNano()" class="bg-[#334155] hover:bg-[#475569] text-slate-200 py-1 px-3 rounded text-xs font-bold">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Validation Modal Overlay -->
+    <div id="validationModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+            <div id="modalHeader" class="bg-indigo-600 p-4 text-white font-bold flex justify-between items-center">
+                <span>Hasil Verifikasi Lab Monitoring Jaringan</span>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalContent" class="p-6 space-y-4 text-sm text-slate-700">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const terminalOutput = document.getElementById('terminalOutput');
+        const cmdInput = document.getElementById('cmdInput');
+        const promptLabel = document.getElementById('promptLabel');
+        const nanoEditor = document.getElementById('nanoEditor');
+        const nanoTextarea = document.getElementById('nanoTextarea');
+        const nanoTitle = document.getElementById('nanoTitle');
+        const validationModal = document.getElementById('validationModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        
+        let isNanoOpen = false;
+        let isMysqlOpen = false;
+        let currentFile = "";
+        let fontSizeClass = "text-[15px]";
+
+        // Virtual File System & State
+        const fileSystem = {
+            "/etc/snmp/snmpd.conf": `# Configuration for SNMP daemon\n`,
+            "/etc/cron.d/cacti": `# Cacti poller cron file\n`,
+            "/usr/local/nagios/etc/objects/hosts.cfg": `# Nagios Core Hosts Configuration\n`
+        };
+
+        let state = { 
+            snmpConfigured: false,
+            snmpRestarted: false,
+            lampInstalled: false, 
+            dbCreated: false, 
+            cactiInstalled: false,
+            cronConfigured: false,
+            nagiosConfigured: false,
+            nagiosValidated: false,
+            nagiosRestarted: false
+        };
+
+        // Mobile View Controller
+        function setMobileView(view) {
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const btnLeft = document.getElementById('btn-mob-left');
+            const btnRight = document.getElementById('btn-mob-right');
+
+            if (view === 'left') {
+                leftPanel.classList.remove('hidden');
+                rightPanel.classList.add('hidden');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+            } else {
+                leftPanel.classList.add('hidden');
+                rightPanel.classList.remove('hidden');
+                rightPanel.classList.add('flex');
+                btnLeft.className = "flex-1 py-2.5 text-xs font-bold text-center bg-slate-800 text-slate-400 flex items-center justify-center gap-2";
+                btnRight.className = "flex-1 py-2.5 text-xs font-bold text-center bg-indigo-600 text-white flex items-center justify-center gap-2";
+                setTimeout(() => cmdInput.focus(), 100);
+            }
+        }
+
+        // Resizer Logic (Desktop)
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let x = 0; let leftWidth = 0;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            x = e.clientX;
+            leftWidth = leftPanel.getBoundingClientRect().width;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'col-resize';
+        });
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftWidth = ((leftWidth + dx) * 100) / resizer.parentNode.getBoundingClientRect().width;
+            if (newLeftWidth > 20 && newLeftWidth < 70) leftPanel.style.width = `${newLeftWidth}%`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.cursor = 'default';
+        };
+
+        // Tabs Logic
+        function switchLeftTab(tabName) {
+            ['guide', 'topology', 'tasks'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            });
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "flex-1 py-3 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 transition-colors";
+        }
+
+        // Copy Command Utility
+        function copyCmd(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i>';
+                setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 1500);
+            });
+        }
+
+        function updateTasks() {
+            // Task 1: SNMP Target Configuration
+            const snmpContent = fileSystem["/etc/snmp/snmpd.conf"] || "";
+            state.snmpConfigured = snmpContent.includes("rocommunity public-monitoring") && snmpContent.includes("agentaddress udp:161");
+            document.getElementById('task_snmp').checked = state.snmpConfigured && state.snmpRestarted;
+
+            // Task 2: LAMP Stack & Package Cacti
+            document.getElementById('task_lamp').checked = state.lampInstalled && state.cactiInstalled;
+
+            // Task 3: Database Cacti MariaDB
+            document.getElementById('task_db').checked = state.dbCreated;
+
+            // Task 4: Cron Job Cacti Poller
+            const cronContent = fileSystem["/etc/cron.d/cacti"] || "";
+            state.cronConfigured = cronContent.includes("poller.php");
+            document.getElementById('task_cron').checked = state.cronConfigured;
+
+            // Task 5: Nagios Core Host Configuration
+            const nagiosContent = fileSystem["/usr/local/nagios/etc/objects/hosts.cfg"] || "";
+            state.nagiosConfigured = nagiosContent.includes("Router-Core") && nagiosContent.includes("check_ping");
+            document.getElementById('task_nagios').checked = state.nagiosConfigured && state.nagiosValidated && state.nagiosRestarted;
+        }
+
+        function changeFontSize() {
+            terminalOutput.classList.remove(fontSizeClass);
+            cmdInput.classList.remove(fontSizeClass);
+
+            fontSizeClass = fontSizeClass === "text-[15px]" ? "text-[18px]" : fontSizeClass === "text-[18px]" ? "text-[12px]" : "text-[15px]";
+            
+            terminalOutput.classList.add(fontSizeClass);
+            cmdInput.classList.add(fontSizeClass);
+        }
+
+        // Server Terminal Core Engine
+        function handleFormSubmit(e) {
+            if(e) e.preventDefault();
+            const cmd = cmdInput.value.trim();
+            if(!cmd && !isMysqlOpen) return;
+
+            if (isMysqlOpen) {
+                printToTerminal(`<span class="text-yellow-400 font-bold">MariaDB [(none)]></span> ${cmd}`);
+                cmdInput.value = '';
+                processMysqlCommand(cmd);
+            } else {
+                printToTerminal(`<span class="text-[#4ade80] font-bold">root@monitoring-server:~#</span> ${cmd}`);
+                cmdInput.value = '';
+                processCommand(cmd);
+            }
+        }
+
+        function submitFormTrigger(cmd) {
+            cmdInput.value = cmd;
+            handleFormSubmit();
+        }
+
+        function printToTerminal(html) {
+            terminalOutput.innerHTML += `<div>${html}</div>`;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function processMysqlCommand(cmd) {
+            const cleanSql = cmd.trim();
+            const upperSql = cleanSql.toUpperCase();
+
+            if (upperSql.startsWith("CREATE DATABASE CACTI")) {
+                state.dbCreated = true;
+                printToTerminal("Query OK, 1 row affected (0.01 sec)");
+            } else if (upperSql.startsWith("GRANT ALL PRIVILEGES ON CACTI")) {
+                printToTerminal("Query OK, 0 rows affected (0.00 sec)");
+            } else if (upperSql.startsWith("FLUSH PRIVILEGES")) {
+                printToTerminal("Query OK, 0 rows affected (0.00 sec)");
+            } else if (upperSql === "EXIT" || upperSql === "EXIT;") {
+                isMysqlOpen = false;
+                promptLabel.innerHTML = "root@monitoring-server:~#";
+                printToTerminal("Bye");
+            } else {
+                printToTerminal("Query OK, 0 rows affected (0.00 sec)");
+            }
+            updateTasks();
+        }
+
+        function processCommand(cmd) {
+            const cleanCmd = cmd.replace(/^sudo\s+/, '').trim();
+            const args = cleanCmd.split(' ');
+            const baseCmd = args[0];
+
+            if (cleanCmd === 'apt update') { 
+                printToTerminal("Hit:1 http://deb.debian.org/debian bookworm InRelease\nReading package lists... Done"); 
+            } 
+            else if (cleanCmd.includes('apt install apache2 mariadb-server')) { 
+                state.lampInstalled = true; 
+                printToTerminal("Reading package lists... Done\nBuilding dependency tree... Done\nInstalling LAMP stack dependencies (apache2, mariadb, php, snmp)... Done"); 
+                updateTasks(); 
+            }
+            else if (cleanCmd.includes('apt install cacti')) {
+                state.cactiInstalled = true;
+                printToTerminal("Reading package lists... Done\nSetting up Cacti Web Monitoring System...\nConfiguring cacti database via dbconfig-common...\nCacti installation completed successfully.");
+                updateTasks();
+            }
+            else if (cleanCmd === 'mysql' || cleanCmd === 'mariadb') {
+                isMysqlOpen = true;
+                promptLabel.innerHTML = '<span class="text-yellow-400 font-bold">MariaDB [(none)]></span>';
+                printToTerminal("Welcome to the MariaDB monitor. Commands end with ; or \\g.\nServer version: 10.11.2-MariaDB Debian 12");
+            }
+            else if (cleanCmd === 'systemctl restart snmpd') {
+                state.snmpRestarted = true;
+                printToTerminal("<span class='text-green-400'>[ OK ] Restarted snmpd (Simple Network Management Protocol daemon)</span>");
+                updateTasks();
+            }
+            else if (cleanCmd.includes('nagios -v')) {
+                if (fileSystem["/usr/local/nagios/etc/objects/hosts.cfg"].includes("Router-Core")) {
+                    state.nagiosValidated = true;
+                    printToTerminal("Nagios Core 4.4.6\nChecking objects...\n\tChecked 1 hosts.\n\tChecked 1 services.\nTotal Warnings: 0\nTotal Errors:   0\n\n<span class='text-green-400'>Things look okay - No serious problems were detected during the pre-flight check.</span>");
+                } else {
+                    printToTerminal("<span class='text-red-400'>Error: Host 'Router-Core' not found or empty configuration in hosts.cfg</span>");
+                }
+                updateTasks();
+            }
+            else if (cleanCmd === 'systemctl restart nagios') {
+                state.nagiosRestarted = true;
+                printToTerminal("<span class='text-green-400'>[ OK ] Restarted nagios (Nagios Core Monitoring Engine)</span>");
+                updateTasks();
+            }
+            else if (baseCmd === 'nano') { 
+                if(args[1]) openNano(args[1]); 
+            }
+            else if (cmd === 'submit-lab') { verifySubmission(); }
+            else if (cmd === 'clear') { terminalOutput.innerHTML = ''; }
+            else { printToTerminal(`bash: ${args[0]}: command not found`); }
+            
+            if(!isNanoOpen) cmdInput.focus();
+        }
+
+        // Nano Editor Logic
+        function openNano(file) {
+            isNanoOpen = true; 
+            currentFile = file;
+            nanoTitle.textContent = `File: ${file}`;
+            if(fileSystem[file] === undefined) fileSystem[file] = "";
+            nanoTextarea.value = fileSystem[file];
+            nanoEditor.style.display = 'flex';
+        }
+
+        function saveAndExitNano() {
+            fileSystem[currentFile] = nanoTextarea.value;
+            printToTerminal(`<span class="text-slate-400">[ Saved ${currentFile} ]</span>`);
+            updateTasks();
+            closeNano();
+        }
+
+        function closeNano() {
+            isNanoOpen = false; 
+            nanoEditor.style.display = 'none'; 
+            cmdInput.focus();
+        }
+        
+        function resetLab() { 
+            if(confirm("Reset seluruh progress praktikum SNMP, Cacti, dan Nagios?")) location.reload(); 
+        }
+
+        // Validation Modal Logic
+        function verifySubmission() {
+            updateTasks();
+            
+            let html = "<ul class='space-y-2'>";
+            let allOk = true;
+
+            const checks = [
+                { cond: state.snmpConfigured && state.snmpRestarted, text: "Konfigurasi SNMP Service Target Node (/etc/snmp/snmpd.conf)" },
+                { cond: state.lampInstalled, text: "Instalasi LAMP Stack Dependencies" },
+                { cond: state.dbCreated, text: "Konfigurasi MariaDB Database Cacti" },
+                { cond: state.cactiInstalled && state.cronConfigured, text: "Instalasi Package Cacti & Cron Job Poller" },
+                { cond: state.nagiosConfigured && state.nagiosValidated && state.nagiosRestarted, text: "Definisi Host & Service Monitoring di Nagios Core (hosts.cfg)" }
+            ];
+
+            checks.forEach(c => {
+                if(c.cond) html += `<li><i class="fa-solid fa-check text-green-500 w-5"></i> ${c.text}</li>`;
+                else { html += `<li><i class="fa-solid fa-xmark text-red-500 w-5"></i> ${c.text}</li>`; allOk = false; }
+            });
+            html += "</ul>";
+
+            if (allOk) {
+                modalHeader.className = "bg-green-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-trophy mr-2"></i>Lab Berhasil Diselesaikan!</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-center"><span class="block text-xs text-green-700 uppercase font-semibold">Token Bukti Kelulusan:</span><span class="font-mono text-xl font-bold text-green-800">CYBER-PRO-SNMP-CACTI-NAGIOS</span></div>`;
+            } else {
+                modalHeader.className = "bg-red-600 p-4 text-white font-bold flex justify-between items-center";
+                modalHeader.innerHTML = `<span><i class="fa-solid fa-triangle-exclamation mr-2"></i>Verifikasi Belum Lengkap</span><button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>`;
+                html += `<p class="mt-4 text-xs text-slate-500 italic">Silakan lengkapi langkah konfigurasi yang bertanda silang merah, lalu klik Verify Target kembali.</p>`;
+            }
+
+            modalContent.innerHTML = html;
+            validationModal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            validationModal.classList.add('hidden');
+            cmdInput.focus();
+        }
+
+        document.getElementById('terminal-workspace-server').addEventListener('click', (e) => {
+            if(!isNanoOpen && e.target.id !== 'nanoTextarea') cmdInput.focus();
+        });
+    </script>
+</body>
+</html>
