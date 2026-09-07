@@ -65,22 +65,53 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 border-b border-slate-800/60 pb-4">
-            <div>
-                <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2 font-mono">
-                    <span class="text-cyan-400">#</span> Modul Praktikum
-                </h2>
-                <p class="text-xs text-slate-400 mt-1">Daftar unit kompetensi laboratorium ASJ Linux Server.</p>
-            </div>
-            <span class="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-slate-800 border border-slate-700 text-slate-300">
-                TOTAL: 12 MODUL
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-12">
+
+        <!-- Overall Total Badge & Header Section -->
+        <div class="flex items-center justify-end">
+            <span class="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-slate-800 border border-slate-700 text-cyan-400">
+                TOTAL: 16 MODUL (4 PEMULA + 12 UTAMA)
             </span>
         </div>
 
-        <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            <!-- Kartu modul akan digenerate secara otomatis -->
-        </div>
+        <!-- SEKSI 1: Modul Dasar / Pemula -->
+        <section>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 border-b border-slate-800/60 pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2 font-mono">
+                        <span class="text-emerald-400">#</span> Modul Dasar / Pemula
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Materi pengenalan dasar navigasi, manajemen file, hak akses, dan simulasi dasar server Linux.</p>
+                </div>
+                <span class="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-emerald-950/60 border border-emerald-800/60 text-emerald-400">
+                    4 MODUL PEMULA
+                </span>
+            </div>
+
+            <div id="pemulaCardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <!-- Kartu Modul Pemula akan digenerate otomatis melalui script -->
+            </div>
+        </section>
+
+        <!-- SEKSI 2: Modul Praktikum Utama -->
+        <section>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 border-b border-slate-800/60 pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2 font-mono">
+                        <span class="text-cyan-400">#</span> Modul Praktikum Utama
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Daftar unit kompetensi laboratorium ASJ Linux Server lanjutan.</p>
+                </div>
+                <span class="text-xs font-mono font-semibold px-3 py-1.5 rounded-md bg-cyan-950/60 border border-cyan-800/60 text-cyan-400">
+                    12 MODUL UTAMA
+                </span>
+            </div>
+
+            <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <!-- Kartu Modul Utama akan digenerate otomatis melalui script -->
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -98,19 +129,39 @@
     </footer>
 
     <script>
+        // Data Modul Pemula (01 - 04)
+        const pemulaModules = [
+            {
+                code: "PEMULA-01",
+                file: "lkpd_pemula_1.html",
+                title: "LKPD 1: \"Jantung\" Linux & Navigasi Dasar",
+                desc: "Pengenalan hierarki direktori Linux (FHS), fungsi command line interface (CLI), serta perintah navigasi dasar (cd, ls, pwd, clear)."
+            },
+            {
+                code: "PEMULA-02",
+                file: "lkpd_pemula_2.html",
+                title: "LKPD 2: Manajemen File & Teks Konfigurasi",
+                desc: "Praktik membuat, menyalin, memindahkan, menghapus file/direktori (mkdir, cp, mv, rm), serta penyuntingan teks konfigurasi menggunakan nano/vim."
+            },
+            {
+                code: "PEMULA-03",
+                file: "lkpd_pemula_3.html",
+                title: "LKPD 3: Manajemen Hak Akses & Kepemilikan",
+                desc: "Konsep izin file Linux (read, write, execute), serta penggunaan perintah chmod, chown, dan chgrp pada sistem server."
+            },
+            {
+                code: "PEMULA-04",
+                file: "lkpd_pemula_4.html",
+                title: "LKPD 4: Simulasi File dhcpd.conf & Pengujian",
+                desc: "Simulasi struktur pengisian file konfigurasi dhcpd.conf (subnet, range, router, DNS) dan teknik pengujian sisi klien (ipconfig /renew / dhclient)."
+            }
+        ];
+
+        // Data Modul Utama (01 - 12)
         const asjFiles = [
-            "lkpd_asj_1.html",   // Modul 1
-            "lkpd_asj_2.html",   // Modul 2
-            "lkpd_asj_3.html",   // Modul 3
-            "lkpd_asj_4.html",   // Modul 4
-            "lkpd_asj_5.html",   // Modul 5
-            "lkpd_asj_6.html",   // Modul 6
-            "lkpd_asj_7.html",   // Modul 7
-            "lkpd_asj_8.html",   // Modul 8
-            "lkpd_asj_9.html",   // Modul 9
-            "lkpd_asj_10.html",  // Modul 10
-            "lkpd_asj_11.html",  // Modul 11
-            "lkpd_asj_12.html"   // Modul 12
+            "lkpd_asj_1.html",   "lkpd_asj_2.html",   "lkpd_asj_3.html",   "lkpd_asj_4.html",
+            "lkpd_asj_5.html",   "lkpd_asj_6.html",   "lkpd_asj_7.html",   "lkpd_asj_8.html",
+            "lkpd_asj_9.html",   "lkpd_asj_10.html",  "lkpd_asj_11.html",  "lkpd_asj_12.html"
         ];
 
         const asjTopics = [
@@ -128,8 +179,39 @@
             "Sistem Monitoring Jaringan (Cacti / Nagios)"
         ];
 
-        const grid = document.getElementById('cardGrid');
+        // Render Modul Pemula
+        const pemulaGrid = document.getElementById('pemulaCardGrid');
+        pemulaModules.forEach(mod => {
+            const card = document.createElement('div');
+            card.className = "group relative p-5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200 flex flex-col justify-between";
+            card.innerHTML = `
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-mono text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2.5 py-0.5 rounded">
+                            ${mod.code}
+                        </span>
+                        <span class="text-[11px] font-mono text-slate-500">${mod.file}</span>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-100 mb-2 group-hover:text-emerald-300 transition-colors">
+                        ${mod.title}
+                    </h3>
+                    <p class="text-slate-400 text-xs mb-6 font-normal line-clamp-2 leading-relaxed">
+                        ${mod.desc}
+                    </p>
+                </div>
+                
+                <a href="${mod.file}" class="w-full py-2.5 px-3 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-slate-200 text-xs font-mono font-semibold transition duration-200 flex items-center justify-between border border-slate-700/60 hover:border-transparent">
+                    <span>$ buka_lab</span>
+                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </a>
+            `;
+            pemulaGrid.appendChild(card);
+        });
 
+        // Render Modul Utama
+        const grid = document.getElementById('cardGrid');
         for (let i = 1; i <= 12; i++) {
             const card = document.createElement('div');
             card.className = "group relative p-5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/5 transition-all duration-200 flex flex-col justify-between";
